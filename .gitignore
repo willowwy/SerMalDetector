@@ -1,0 +1,9 @@
+# Ignore node_modules directory
+.idea/
+.vscode/
+data/
+feature-extract/.vscode
+feature-extract/node_modules/
+feature-extract/out
+feature-extract/dist/
+feature-sequence/node_modules/
