@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch TS File",
+            "type": "node",
+            "request": "launch",
+            "args": ["-r", "ts-node/register", "${workspaceFolder}/src/index.ts"],
+            "runtimeArgs": ["--nolazy"],
+            "sourceMaps": true,
+            "cwd": "${workspaceFolder}",
+            "protocol": "inspector",
+            "internalConsoleOptions": "openOnSessionStart"
+        }
+    ]
+}

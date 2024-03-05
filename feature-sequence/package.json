@@ -1,0 +1,19 @@
+{
+  "name": "feature-extract",
+  "version": "1.0.0",
+  "description": "extract serialized vectors",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "analyze": "python ./python/analyze.py",
+    "jelly": "jelly --ignore-dependencies -j ../data/call-graphs/color2.1-1.4.0.json -b ../data/datasets/color2.1-1.4.0 ../data/datasets/color2.1-1.4.0/package/lib"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@cs-au-dk/jelly": "^0.8.0"
+  }
+}
