@@ -1,12 +1,13 @@
 import path from 'path'
 import promises from 'fs/promises'
 import { getPackageJSONInfo, type PackageJSONInfo } from './PackageJSONInfo'
-import { getDomainPattern, IP_Pattern, Network_Command_Pattern, SensitiveStringPattern } from './Patterns'
+import { getDomainPattern, IP_Pattern, Network_Command_Pattern, SensitiveStringPattern, getDomainsType } from './Patterns'
 import { getAllJSFilesInInstallScript } from './GetInstallScripts'
 import { extractFeaturesFromJSFileByAST } from './AST'
 import { matchUseRegExp } from './RegExp'
 import { PositionRecorder } from './PositionRecorder'
 import { setPositionRecorder } from '../config'
+import { getPackageFromDir } from '../util'
 import { Logger } from '../Logger'
 
 const ALLOWED_MAX_JS_SIZE = 2 * 1024 * 1024
@@ -18,8 +19,8 @@ export interface PackageFeatureInfo {
   useBase64ConversionInScript: boolean
   includeBase64String: boolean
   includeBase64StringInScript: boolean
-  includeDomain: boolean
-  includeDomainInScript: boolean
+  includeDomain: number
+  includeDomainInScript: number
   includeByteString: boolean
   useBuffer: boolean
   useEval: boolean
@@ -33,6 +34,7 @@ export interface PackageFeatureInfo {
   useProcessEnvInScript: boolean
   useEncryptAndEncode: boolean
   useOperatingSystem: boolean
+  includeObfuscatedCode: boolean
   includeSensitiveFiles: boolean
   installCommand: string[]
   executeJSFiles: string[]
@@ -52,8 +54,8 @@ export async function getPackageFeatureInfo (packagePath: string): Promise<Packa
     includeBase64String: false,
     includeBase64StringInScript: false,
     includeByteString: false,
-    includeDomain: false,
-    includeDomainInScript: false,
+    includeDomain: 0,
+    includeDomainInScript: 0,
     useBuffer: false,
     useEval: false,
     useProcess: false,
@@ -66,60 +68,77 @@ export async function getPackageFeatureInfo (packagePath: string): Promise<Packa
     useProcessEnvInScript: false,
     useEncryptAndEncode: false,
     useOperatingSystem: false,
+    includeObfuscatedCode: false,
     includeSensitiveFiles: false,
     installCommand: [],
     executeJSFiles: [],
   }
-  const packageJSONPath = path.join(packagePath, 'package.json')
-  const packageJSONInfo: PackageJSONInfo = await getPackageJSONInfo(packageJSONPath)
-  Object.assign(result, packageJSONInfo)
+  
+  try {
+    // const packageJSONPath = path.join(packagePath, 'package', 'package.json')
+    const actualPackagePath = await getPackageFromDir(packagePath)
+    if (actualPackagePath !== '') {
+      const packageJSONPath = path.join(actualPackagePath, 'package.json')
+      await promises.access(packageJSONPath)
+      const packageJSONInfo: PackageJSONInfo = await getPackageJSONInfo(packageJSONPath)
+      Object.assign(result, packageJSONInfo)
 
-  if (packageJSONInfo.includeInstallScript) {
-    positionRecorder.addRecord('includeInstallScript', {
-      filePath: packageJSONPath,
-      content: packageJSONInfo.installCommand[0]
-    })
-  }
+      if (packageJSONInfo.includeInstallScript) {
+        positionRecorder.addRecord('includeInstallScript', {
+          filePath: packageJSONPath,
+          content: packageJSONInfo.installCommand[0]
+        })
+      }
 
-  // analyze commands in the install script 
-  for (const scriptContent of packageJSONInfo.installCommand) {
-    {
-      const matchResult = scriptContent.match(IP_Pattern)
-      if (matchResult != null) {
-        result.includeIP = true
-        positionRecorder.addRecord('includeIP', { filePath: packageJSONPath, content: scriptContent })
+      // analyze commands in the install script 
+      for (const scriptContent of packageJSONInfo.installCommand) {
+        {
+          const matchResult = scriptContent.match(IP_Pattern)
+          if (matchResult != null) {
+            result.includeIP = true
+            positionRecorder.addRecord('includeIP', { filePath: packageJSONPath, content: scriptContent })
+          }
+        }
+        {
+          const matchResult = scriptContent.match(getDomainPattern())
+          if (matchResult != null) {
+            const domainType = getDomainsType(matchResult)
+            if (result.includeDomainInScript < domainType) {
+              result.includeDomainInScript = domainType
+            }
+            for (const domain of matchResult) {
+              positionRecorder.addRecord('includeDomainInScript', {
+                filePath: packageJSONPath,
+                content: domain
+              })
+            }
+          }
+        }
+        {
+          const matchResult = scriptContent.match(Network_Command_Pattern)
+          if (matchResult != null) {
+            result.useNetworkInScript = true
+            positionRecorder.addRecord('useNetworkInScript', {
+              filePath: packageJSONPath,
+              content: scriptContent
+            })
+          }
+        }
+        {
+          const matchResult = scriptContent.match(SensitiveStringPattern)
+          if (matchResult != null) {
+            result.includeSensitiveFiles = true
+            positionRecorder.addRecord('includeSensitiveFiles', {
+              filePath: packageJSONPath,
+              content: scriptContent
+            })
+          }
+        }
       }
     }
-    {
-      const matchResult = scriptContent.match(getDomainPattern())
-      if (matchResult != null) {
-        result.includeDomainInScript = true
-        positionRecorder.addRecord('includeDomainInScript', {
-          filePath: packageJSONPath,
-          content: scriptContent
-        })
-      }
-    }
-    {
-      const matchResult = scriptContent.match(Network_Command_Pattern)
-      if (matchResult != null) {
-        result.useNetworkInScript = true
-        positionRecorder.addRecord('useNetworkInScript', {
-          filePath: packageJSONPath,
-          content: scriptContent
-        })
-      }
-    }
-    {
-      const matchResult = scriptContent.match(SensitiveStringPattern)
-      if (matchResult != null) {
-        result.includeSensitiveFiles = true
-        positionRecorder.addRecord('includeSensitiveFiles', {
-          filePath: packageJSONPath,
-          content: scriptContent
-        })
-      }
-    }
+    
+  } catch (error) {
+    Logger.error(`Cannot find package.json in ${packagePath}/package`)
   }
 
   // analyze JavaScript files in the install script

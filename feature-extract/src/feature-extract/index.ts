@@ -2,7 +2,6 @@ import path from 'path'
 import promises from 'fs/promises'
 import { stringify } from 'csv-stringify/sync'
 import { getPackageFeatureInfo, type PackageFeatureInfo } from './PackageFeatureInfo'
-import { Logger } from '../Logger'
 
 /**
  * Extract features from the npm package and save the features to the feature file
@@ -12,8 +11,9 @@ import { Logger } from '../Logger'
  */
 export async function extractFeatureFromPackage (packagePath: string, featureDirPath: string) {
   const result: PackageFeatureInfo = await getPackageFeatureInfo(packagePath)
-  const fileName = path.basename(path.dirname(packagePath))
-  const csvPath = path.join(featureDirPath, `${fileName}.csv`)
+  // const packageName = path.basename(path.dirname(packagePath))
+  const packageName = path.basename(packagePath)
+  const csvPath = path.join(featureDirPath, `${packageName}.csv`)
   const featureArr: Array<[string, number | boolean]> = []
   featureArr.push(['hasInstallScript', result.includeInstallScript])
   featureArr.push(['includeIP', result.includeIP])
@@ -37,6 +37,7 @@ export async function extractFeatureFromPackage (packagePath: string, featureDir
   featureArr.push(['containSuspicousString', result.includeSensitiveFiles])
   featureArr.push(['useEncryptAndEncode', result.useEncryptAndEncode])
   featureArr.push(['useOperatingSystem', result.useOperatingSystem])
+  featureArr.push(['includeObfuscatedCode', result.includeObfuscatedCode])
   await new Promise(resolve => {
     setTimeout(async () => {
       await promises.writeFile(csvPath, stringify(featureArr, {

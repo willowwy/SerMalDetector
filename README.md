@@ -1,15 +1,36 @@
+# SerMalDetector
+
+## Introduction
+
+A project aimed at detecting and analyzing malicious package patterns through the use of sophisticated feature extraction and sequence analysis techniques.
+
+## Development Status
+
+This project is in the early stages of development. Currently, we are focused on developing core functionalities, including feature extraction and initial model training.
+
+## Requirements
+
+### Environment
+
+Python: Python 3.11.1
+node.js: node.js v18.16.0
+
+### Installation
+
+As the project is in its initial development phase, installation instructions will be provided as soon as a stable version is available.
+
+## Project Structure
 
 ```
 SerMalDetector
 |
 ├─ data
-│  ├─ call-graphs
-│  │  
-│  ├─ datasets
-│  ├─ feature-positions
-│  └─ features
+│  ├─ call-graphs(call graphs of analyzed packages)  
+│  ├─ datasets(used datasets)
+│  ├─ feature-positions(feature positions of analyzed packages)
+│  └─ features(features of analyzed packages)
 |
-├─ feature-extract
+├─ feature-extract(used to extract features from packages)
 │  ├─ material
 │  │  └─ top-domains.json
 │  └─ src
@@ -22,7 +43,7 @@ SerMalDetector
 │        ├─ FileUtil.ts
 │        └─ index.ts
 |
-├─ feature-sequence
+├─ feature-sequence(used to generate the sequence of features)
 │  ├─ package-lock.json
 │  ├─ package.json
 │  └─ src
