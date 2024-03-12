@@ -1,10 +1,13 @@
 {
+  "name": "feature-sequence",
+  "version": "1.0.0",
+  "main": "./src/index.js",
   "scripts": {
-    "start": "node index.js",
-    "help": "js-callgraph -h",
-    "test": "js-callgraph --cg ./package --output call.json > flow.json",
-    "flow":"js-callgraph --fg ./package > flow.json",
+    "start": "node ./src/index.js",
+    "test": "js-callgraph --cg ./data/1 --output 1.json",
+    "help": "js-callgraph -h"
   },
+  "author": "Wenyun_Wang",
   "dependencies": {
     "@persper/js-callgraph": "^1.3.2"
   }
