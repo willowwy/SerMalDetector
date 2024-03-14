@@ -4,7 +4,7 @@ const path = require("path");
 const CallGraphForSubdirectory = require("./generateCallGraphs");
 const { initiateTraversal } = require("./dfsTraversal");
 
-const DB_DIRECTORY_PATH = "../data/big";
+const DB_DIRECTORY_PATH = "../data/datasets";
 const CG_DIRECTORY_PATH = "../data/call-graphs";
 const QUEUE_DIRECTORY_PATH = "../data/func-queue";
 

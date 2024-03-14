@@ -15,7 +15,7 @@ export async function extractFeatureFromPackage (packagePath: string, featureDir
   const packageName = path.basename(packagePath)
   const csvPath = path.join(featureDirPath, `${packageName}.csv`)
   const featureArr: Array<[string, number | boolean]> = []
-  featureArr.push(['hasInstallScript', result.includeInstallScript])
+  featureArr.push(['includeInstallScript', result.includeInstallScript])
   featureArr.push(['includeIP', result.includeIP])
   featureArr.push(['useBase64Conversion', result.useBase64Conversion])
   featureArr.push(['useBase64ConversionInScript', result.useBase64ConversionInScript])
@@ -34,7 +34,7 @@ export async function extractFeatureFromPackage (packagePath: string, featureDir
   featureArr.push(['useNetworkInScript', result.useNetworkInScript])
   featureArr.push(['useProcessEnv', result.useProcessEnv])
   featureArr.push(['useProcessEnvInScript', result.useProcessEnvInScript])
-  featureArr.push(['containSuspicousString', result.includeSensitiveFiles])
+  featureArr.push(['includeSensitiveFiles', result.includeSensitiveFiles])
   featureArr.push(['useEncryptAndEncode', result.useEncryptAndEncode])
   featureArr.push(['useOperatingSystem', result.useOperatingSystem])
   featureArr.push(['includeObfuscatedCode', result.includeObfuscatedCode])

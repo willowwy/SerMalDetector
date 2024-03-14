@@ -6,12 +6,17 @@
 # pip3 install -r training/requirements.txt
 # deactivate
 # echo 'Setuping the python environment and dependencies done!'
+# Create data directories
+
+echo 'Creating data directories...'
+mkdir data
+mkdir -p data/call-graphs data/datasets data/feature-positions data/features data/func-queue
+echo 'Data directories created!'
 
 echo 'Setuping the node environment and dependencies...'
 cd feature-extract && \
 npm install && \
 npm run compile && \
-cd ../feature-sequence && \
+cd ../feature-extract&& \
 npm install && \
-npm run jelly && \
 echo 'Setuping the node environment and dependencies done!'
