@@ -1,0 +1,28 @@
+{
+  "files": [
+    {
+      "filePath": "PathtoFile",
+      "functions": [
+        {
+          "functionName": "exampleFunction",
+          "features": [
+            {
+              "featureName": "feature1",
+              "content": {
+                "start": { "line": 33, "column": 13, "index": 1709 },
+                "end": { "line": 33, "column": 26, "index": 1722 }
+              }
+            },
+            {
+              "featureName": "feature2",
+              "content": {
+                "start": { "line": 33, "column": 13, "index": 1709 },
+                "end": { "line": 33, "column": 26, "index": 1722 }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

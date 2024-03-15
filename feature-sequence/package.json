@@ -9,6 +9,6 @@
   },
   "author": "Wenyun_Wang",
   "dependencies": {
-    "@persper/js-callgraph": "^1.3.2"
+    "@cs-au-dk/jelly": "^0.8.0"
   }
 }

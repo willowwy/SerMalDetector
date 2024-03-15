@@ -4,9 +4,9 @@ const path = require("path");
 const CallGraphForSubdirectory = require("./generateCallGraphs");
 const { initiateTraversal } = require("./dfsTraversal");
 
-const DB_DIRECTORY_PATH = "../data/datasets";
-const CG_DIRECTORY_PATH = "../data/call-graphs";
-const QUEUE_DIRECTORY_PATH = "../data/func-queue";
+const DB_DIRECTORY_PATH = "data/datasets";
+const CG_DIRECTORY_PATH = "data/call-graphs";
+const QUEUE_DIRECTORY_PATH = "data/func-queue";
 
 /**
  * Traverses the root directory and generates call graphs and traversal queues for each subdirectory.
@@ -25,7 +25,7 @@ async function traverseAndGenerate(rootDirectoryPath) {
         // Generate the call graph for the subdirectory
         let graphData = await CallGraphForSubdirectory(subDataPath, graphFilePath);
         // Perform DFS using the generated call graph and save the traversal queue
-        initiateTraversal(graphFilePath, subDataPath, queueFilePath,graphData);
+        initiateTraversal(graphFilePath, queueFilePath);
     }
 }
 
@@ -36,7 +36,7 @@ async function main() {
     try {
         await traverseAndGenerate(DB_DIRECTORY_PATH);
         console.log(
-            "Completed generating call graphs and traversal queues for all subdirectories."
+            "Completed generating call graphs for all packages."
         );
     } catch (error) {
         console.error("An error occurred:", error);

@@ -1,81 +1,62 @@
-const fs = require("fs");
+const fs = require("fs").promises; // 使用fs的promise API以支持异步操作
 const path = require("path");
 
 /**
- * Finds the start node based on the main entry point specified in package.json.
- * @param {string} dirPath The path to the directory containing package.json.
- * @param {string} graphData The graph data file.
- * @returns {Object} The start node if found, otherwise null.
+ * Performs a Depth-First Search (DFS) traversal on a given call graph to identify
+ * the order of function calls starting from specified entry points.
+ * 
+ * @param {number} nodeIndex Index of the current node being visited.
+ * @param {Object} graphData Data representing the call graph.
+ * @param {Object} callQueueMap Map storing the sequence of function calls for each file.
+ * @param {Array} currentPath The current path of node indices visited during the traversal.
+ * @param {string} fileName The name of the file being processed.
  */
-function findStartNode(dirPath, graphData) {
-  try {
-    const packageJSONPath = path.join(dirPath, 'package', 'package.json');
-    const packageContent = JSON.parse(fs.readFileSync(packageJSONPath, 'utf-8'));
-    if (!packageContent || !packageContent.main) {
-      throw new Error('Invalid package.json or main entry point not specified.');
-    }
-
-    const entryPointPath = path.normalize(packageContent.main);
-    const startNode = graphData.find(node => node.source.file.endsWith(entryPointPath));
-    if (startNode === undefined) {
-      console.log(path.basename(dirPath) + ': startNode does not exist');
-      return null;
-    }
-    return startNode;
-  } catch (error) {
-    console.error('Error finding start node:', error.message);
-    return null;
+function dfsTraversal(nodeIndex, graphData, callQueueMap, currentPath, fileName) {
+  if (!callQueueMap[fileName]) {
+    callQueueMap[fileName] = [];
   }
-}
 
+  currentPath.push(nodeIndex);
 
-/**
- * Performs a DFS traversal from the specified node, marking visited nodes and compiling a call queue.
- * @param {Object} currentNode The node from which to start traversal.
- * @param {Array} graphData Data representing the call graph.
- * @param {Set} visited A set to track visited nodes.
- * @param {Array} callQueue An array to compile the traversal order.
- */
-function dfsTraversal(currentNode, graphData, visited, callQueue) {
-  visited.add(currentNode.source.label);
-  callQueue.push(currentNode.source.label);
+  const isRecursiveCall = currentPath.slice(-4).every(index => index === nodeIndex);
+  
+  if (!isRecursiveCall || currentPath.length < 4) {
+    callQueueMap[fileName].push(nodeIndex.toString());
 
-  graphData.forEach((node) => {
-    if (
-      node.source.label === currentNode.target.label &&
-      !visited.has(node.target.label)
-    ) {
-      dfsTraversal(node, graphData, visited, callQueue);
-    }
-  });
-}
-
-/**
- * Initiates DFS traversal and saves the traversal queue to a file.
- * @param {string} graphFilePath - Path to the call graph JSON file. 
- * @param {string} DirPath - Dir name for the traversal. 
- * @param {string} outputPath - Path to save the traversal queue. 
- */
-function initiateTraversal(graphFilePath, DirPath, outputPath, graphData) {
-  const visited = new Set();
-  const callQueue = [];
-
-  if (startNode = findStartNode(DirPath, graphData)) {
-    dfsTraversal(startNode, graphData, visited, callQueue);
-    fs.writeFileSync(outputPath, callQueue.join("\n"), "utf8");
-    console.log(
-      `Function call queue has been written to the file: ${outputPath}`
-    );
-  }
-  else {
-    fs.writeFile(outputPath, '', (err) => {
-      if (err) throw err;
-      console.log('Empty file created successfully.');
+    graphData.fun2fun.forEach(([caller, callee]) => {
+      if (caller === nodeIndex) {
+        dfsTraversal(callee, graphData, callQueueMap, [...currentPath], fileName);
+      }
     });
   }
+
+  currentPath.pop();
 }
 
 /**
- * The main function orchestrating the program execution.
+ * Initiates the traversal of the function call graph and writes the call queue
+ * to the specified output file.
+ * 
+ * @param {string} graphFilePath Path to the graph data file.
+ * @param {string} outputPath Path where the output file will be written.
  */
+async function initiateTraversal(graphFilePath, outputPath) {
+  const graphData = JSON.parse(await fs.readFile(graphFilePath, 'utf-8'));
+  const callQueueMap = {};
+
+  graphData.entries.forEach(entry => {
+    const startNodeIndex = graphData.files.indexOf(entry);
+    if (startNodeIndex !== -1) {
+      Object.keys(graphData.functions).forEach(func => {
+        if (graphData.functions[func].startsWith(startNodeIndex.toString())) {
+          dfsTraversal(parseInt(func), graphData, callQueueMap, [], entry);
+        }
+      });
+    }
+  });
+
+  await fs.writeFile(outputPath, JSON.stringify(callQueueMap, null, 2), "utf8");
+  console.log(`Function call queue has been written to the file: ${outputPath}`);
+}
+
 module.exports = { initiateTraversal };
