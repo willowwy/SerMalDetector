@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "compile": "webpack",
-    "start": "webpack && cd dist && node main.js -d D:\\Study\\Lab_NPM\\SerMalDetector\\feature-extract\\data\\datasets D:\\Study\\Lab_NPM\\SerMalDetector\\feature-extract\\data\\features D:\\Study\\Lab_NPM\\SerMalDetector\\feature-extract\\data\\feature-positions"
+    "debug":"webpack && cd dist && node --inspect-brk main.js -d /home/wwy/SerMalDetector/data/datasets /home/wwy/SerMalDetector/data/features /home/wwy/SerMalDetector/data/feature-positions",
+    "start": "webpack && cd dist && node main.js -d /home/wwy/SerMalDetector/data/datasets /home/wwy/SerMalDetector/data/features /home/wwy/SerMalDetector/data/feature-positions"
   },
   "keywords": [],
   "author": "",

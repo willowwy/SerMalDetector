@@ -6,8 +6,10 @@ export function matchUseRegExp (code: string, result: PackageFeatureInfo, positi
   const matchResult = code.match(byteString_Pattern)
   if (matchResult != null) {
     result.includeByteString = true
-    positionRecorder.addRecord('includeByteString', {
+    positionRecorder.addRecord({
       filePath: targetJSFilePath,
+      functionName: 'N/A',
+      featureName: 'includeByteString',
       content: matchResult[1]
     })
   }

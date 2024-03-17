@@ -44,7 +44,7 @@ export interface PackageFeatureInfo {
  * Extract features from the npm package
  * @param packagePath the directory of the npm package, where there should be a package.json file
  */
-export async function getPackageFeatureInfo (packagePath: string): Promise<PackageFeatureInfo> {
+export async function getPackageFeatureInfo(packagePath: string): Promise<PackageFeatureInfo> {
   const positionRecorder = new PositionRecorder()
   const result: PackageFeatureInfo = {
     includeInstallScript: false,
@@ -73,7 +73,7 @@ export async function getPackageFeatureInfo (packagePath: string): Promise<Packa
     installCommand: [],
     executeJSFiles: [],
   }
-  
+
   try {
     // const packageJSONPath = path.join(packagePath, 'package', 'package.json')
     const actualPackagePath = await getPackageFromDir(packagePath)
@@ -84,10 +84,12 @@ export async function getPackageFeatureInfo (packagePath: string): Promise<Packa
       Object.assign(result, packageJSONInfo)
 
       if (packageJSONInfo.includeInstallScript) {
-        positionRecorder.addRecord('includeInstallScript', {
+        positionRecorder.addRecord({
           filePath: packageJSONPath,
+          functionName: 'N/A',
+          featureName: 'includeInstallScript',
           content: packageJSONInfo.installCommand[0]
-        })
+        });
       }
 
       // analyze commands in the install script 
@@ -96,7 +98,12 @@ export async function getPackageFeatureInfo (packagePath: string): Promise<Packa
           const matchResult = scriptContent.match(IP_Pattern)
           if (matchResult != null) {
             result.includeIP = true
-            positionRecorder.addRecord('includeIP', { filePath: packageJSONPath, content: scriptContent })
+            positionRecorder.addRecord({
+              filePath: packageJSONPath,
+              functionName: 'N/A',
+              featureName: 'includeIP',
+              content: scriptContent
+            });
           }
         }
         {
@@ -107,10 +114,12 @@ export async function getPackageFeatureInfo (packagePath: string): Promise<Packa
               result.includeDomainInScript = domainType
             }
             for (const domain of matchResult) {
-              positionRecorder.addRecord('includeDomainInScript', {
+              positionRecorder.addRecord({
                 filePath: packageJSONPath,
+                functionName: 'N/A',
+                featureName: 'includeDomainInScript',
                 content: domain
-              })
+              });
             }
           }
         }
@@ -118,25 +127,31 @@ export async function getPackageFeatureInfo (packagePath: string): Promise<Packa
           const matchResult = scriptContent.match(Network_Command_Pattern)
           if (matchResult != null) {
             result.useNetworkInScript = true
-            positionRecorder.addRecord('useNetworkInScript', {
+            positionRecorder.addRecord({
               filePath: packageJSONPath,
+              functionName: 'N/A',
+              featureName: 'useNetworkInScript',
               content: scriptContent
-            })
+            });
           }
         }
         {
           const matchResult = scriptContent.match(SensitiveStringPattern)
           if (matchResult != null) {
             result.includeSensitiveFiles = true
-            positionRecorder.addRecord('includeSensitiveFiles', {
-              filePath: packageJSONPath,
-              content: scriptContent
-            })
+            for (const sensitiveString of matchResult) {
+              positionRecorder.addRecord({
+                filePath: packageJSONPath,
+                functionName: 'N/A',
+                featureName: 'includeSensitiveFiles',
+                content: sensitiveString
+              });
+            }
           }
         }
       }
     }
-    
+
   } catch (error) {
     Logger.error(`Cannot find package.json in ${packagePath}/package`)
   }
@@ -144,7 +159,7 @@ export async function getPackageFeatureInfo (packagePath: string): Promise<Packa
   // analyze JavaScript files in the install script
   await getAllJSFilesInInstallScript(result.executeJSFiles)
 
-  async function traverseDir (dirPath: string) {
+  async function traverseDir(dirPath: string) {
     if (path.basename(dirPath) === 'node_modules') {
       return
     }

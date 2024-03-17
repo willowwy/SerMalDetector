@@ -1,56 +1,60 @@
-import { type PackageFeatureInfo } from './PackageFeatureInfo'
-
-const MAX_RECORD_NUMBER = 1000
+import { type PackageFeatureInfo } from './PackageFeatureInfo';
 
 export interface Record {
-  filePath: string
+  filePath: string;
+  functionName: string;
+  featureName: string;
   content: {
     start: {
-      line: number
-      column: number
-    }
+      line: number;
+      column: number;
+    };
     end: {
-      line: number
-      column: number
-    }
-  } | string
+      line: number;
+      column: number;
+    };
+  } | string;
 }
 
-type RecordFeatureInfo = Omit<PackageFeatureInfo, 'includeBase64String' | 'includeBase64StringInScript' | 'installCommand' | 'executeJSFiles' | 'packageName' | 'version'>
-
 export class PositionRecorder {
-  featurePosSet: { [k in keyof RecordFeatureInfo]: Record[] } = {
-    includeInstallScript: [],
-    includeIP: [],
-    useBase64Conversion: [],
-    useBase64ConversionInScript: [],
-    includeDomain: [],
-    includeDomainInScript: [],
-    includeByteString: [],
-    useBuffer: [],
-    useEval: [],
-    useProcess: [],
-    useProcessInScript: [],
-    useFileSystem: [],
-    useFileSystemInScript: [],
-    useNetwork: [],
-    useNetworkInScript: [],
-    useProcessEnv: [],
-    useProcessEnvInScript: [],
-    useEncryptAndEncode: [],
-    useOperatingSystem: [],
-    includeObfuscatedCode: [],
-    includeSensitiveFiles: []
-  }
+  featurePosSet: Array<{
+    filePath: string;
+    functions: Array<{
+      functionName: string;
+      features: Array<{
+        featureName: string;
+        content: {
+          start: { line: number; column: number; index?: number };
+          end: { line: number; column: number; index?: number };
+        } | string;
+      }>;
+    }>;
+  }> = [];
 
-  addRecord (key: keyof PackageFeatureInfo, record: Record) {
-    if (this.featurePosSet[key].length > MAX_RECORD_NUMBER) {
-      return
+  addRecord(record: Record) {
+    // Find or create the file object
+    let fileObj = this.featurePosSet.find(f => f.filePath === record.filePath);
+    if (!fileObj) {
+      fileObj = { filePath: record.filePath, functions: [] };
+      this.featurePosSet.push(fileObj);
     }
-    this.featurePosSet[key].push(record)
+
+    // Find or create the function object within the file
+    let funcObj = fileObj.functions.find(f => f.functionName === record.functionName);
+    if (!funcObj) {
+      funcObj = { functionName: record.functionName, features: [] };
+      fileObj.functions.push(funcObj);
+    }
+
+    // Add the feature to the function
+    funcObj.features.push({
+      featureName: record.featureName,
+      content: record.content
+    });
   }
 
-  serializeRecord () {
-    return JSON.stringify(this.featurePosSet)
+  serializeRecord() {
+    // Serialize the featurePosSet with pretty print
+    return JSON.stringify(this.featurePosSet, null, 2);
   }
 }
