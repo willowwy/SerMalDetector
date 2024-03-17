@@ -17,6 +17,6 @@ echo 'Setuping the node environment and dependencies...'
 cd feature-extract && \
 npm install && \
 npm run compile && \
-cd ../feature-extract&& \
+cd ../feature-sequence&& \
 npm install && \
 echo 'Setuping the node environment and dependencies done!'
