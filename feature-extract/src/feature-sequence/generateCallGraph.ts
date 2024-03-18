@@ -1,17 +1,17 @@
-// generateCallGraphs.js
-const { exec } = require('child_process');
-const path = require('path');
+import { exec } from 'child_process';
+import path from 'path';
 
 /**
  * Generates a call graph for a single subdirectory.
- * @param {string} subdirPath - Path to the subdirectory for which to generate the call graph.
+ * @param packagePath - Path to the subdirectory for which to generate the call graph.
+ * @param CallGraphFilePath - The path where the call graph file will be saved.
  */
-async function CallGraphForSubdirectory(subdirPath,CallGraphFilePath) {
+export async function CallGraphForPackage(packagePath: string, CallGraphFilePath: string): Promise<void> {
     return new Promise((resolve, reject) => {
-        const dirName = path.basename(subdirPath);
-        const PackagePath = path.join(subdirPath, "package");
+        const dirName: string = path.basename(packagePath);
+        const PackagePath: string = path.join(packagePath, "package");
 
-        const command = `npx jelly -j ${CallGraphFilePath} ${PackagePath}`;
+        const command: string = `npx jelly -j ${CallGraphFilePath} ${PackagePath}`;
 
         exec(command, (error, stdout, stderr) => {
             if (error) {
@@ -27,5 +27,3 @@ async function CallGraphForSubdirectory(subdirPath,CallGraphFilePath) {
         });
     });
 }
-
-module.exports = CallGraphForSubdirectory;

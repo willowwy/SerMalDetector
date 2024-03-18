@@ -1,0 +1,1 @@
+rm data/call-graphs/* data/feature-positions/* data/features/* data/func-queues/*

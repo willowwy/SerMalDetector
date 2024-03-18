@@ -35,7 +35,7 @@ export async function extractFeaturesFromJSFileByAST(
   function getRecord(path, featureName) {
     return {
       filePath: targetJSFilePath,
-      functionName: path.node.id,
+      functionName: Math.random().toString(),
       featureName: featureName,
       content: path.node.loc
     } as Record

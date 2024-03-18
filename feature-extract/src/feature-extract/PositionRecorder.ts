@@ -47,10 +47,18 @@ export class PositionRecorder {
     }
 
     // Add the feature to the function
-    funcObj.features.push({
+    const featureObj = {
       featureName: record.featureName,
       content: record.content
-    });
+    };
+
+    // // Ensure the content object does not contain unwanted properties
+    // if (typeof featureObj.content !== 'string') {
+    //   delete featureObj.content.start.index;
+    //   delete featureObj.content.end.index;
+    // }
+
+    funcObj.features.push(featureObj);
   }
 
   serializeRecord() {

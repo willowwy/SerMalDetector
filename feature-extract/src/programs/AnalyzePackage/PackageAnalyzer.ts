@@ -2,6 +2,8 @@ import path from 'path'
 import promises from 'fs/promises'
 import { Worker, parentPort, workerData } from 'worker_threads'
 import { extractFeatureFromPackage } from '../../feature-extract'
+import { CallGraphForPackage } from '../../feature-sequence/generateCallGraph'
+import { initiateTraversal } from '../../feature-sequence/dfsTraversal'
 import { getErrorInfo } from '../../util'
 import { getConfig } from '../../config'
 import { Logger } from '../../Logger'
@@ -13,7 +15,7 @@ import { readdirSync } from 'fs'
  * @param featurePosPath the absolute path to the feature position file
  * @returns the result of extracting features
  */
-function getAnalyzeResult (fileName: string, featurePosPath: string): string {
+function getAnalyzeResult(fileName: string, featurePosPath: string): string {
   return `Finished extracting features of ${fileName}, recorded at ${featurePosPath}`
 }
 
@@ -24,16 +26,34 @@ function getAnalyzeResult (fileName: string, featurePosPath: string): string {
  * @param featurePosDirPath the absolute directory path to save feature position files
  * @returns the result of extracting features
  */
-export async function analyzeSinglePackage (packagePath: string, featureDirPath: string, featurePosDirPath: string) {
-  const result = await extractFeatureFromPackage(packagePath, featureDirPath)
-  // const packageName = path.basename(path.dirname(packagePath))
+export async function analyzeSinglePackage(packagePath: string, featureDirPath: string, featurePosDirPath: string, CallGraphDirPath: string, featureQueueDirPath: string) {
   const packageName = path.basename(packagePath)
+
+  //extract feature
+  const featurePosPath = path.join(featurePosDirPath, `${packageName}.json`)
   try {
-    const featurePosPath = path.join(featurePosDirPath, `${packageName}.json`)
-    // const featurePosPath = path.join(featurePosDirPath, `feature-positions.json`)
+    await extractFeatureFromPackage(packagePath, featureDirPath)
     Logger.info(getAnalyzeResult(packageName, featurePosPath))
     await promises.writeFile(featurePosPath, getConfig().positionRecorder!.serializeRecord())
-    return result
+  } catch (error) {
+    Logger.error(getErrorInfo(error))
+    return null
+  }
+
+  //generate call graph and functions queue
+  const CallGraphFilePath = path.join(CallGraphDirPath, `${packageName}_cg.json`)
+  const queueFilePath = path.join(featureQueueDirPath, `${packageName}_queue.json`)
+  try {
+    await CallGraphForPackage(packagePath, CallGraphFilePath)
+    await initiateTraversal(CallGraphFilePath, queueFilePath)
+  } catch (error) {
+    Logger.error(getErrorInfo(error))
+    return null
+  }
+
+  //generate feature queue
+  try {
+    
   } catch (error) {
     Logger.error(getErrorInfo(error))
     return null
@@ -46,9 +66,11 @@ export async function analyzeSinglePackage (packagePath: string, featureDirPath:
  * @param featureDirPath the absolute directory path to save feature files
  * @param featurePosDirPath the absolute directory path to save feature position files
  */
-export async function analyzePackages (packageDirPath: string, featureDirPath: string, featurePosDirPath: string) {
-  try { await promises.mkdir(featureDirPath) } catch (e) {}
-  try { await promises.mkdir(featurePosDirPath) } catch (e) {}
+export async function analyzePackages(packageDirPath: string, featureDirPath: string, featurePosDirPath: string, CallGraphDirPath: string, featureQueueDirPath: string) {
+  try { await promises.mkdir(featureDirPath) } catch (e) { }
+  try { await promises.mkdir(featurePosDirPath) } catch (e) { }
+  try { await promises.mkdir(CallGraphDirPath) } catch (e) { }
+  try { await promises.mkdir(featureQueueDirPath) } catch (e) { }
   // const packagesPath = await getPackagesFromDir(packageDirPath)
   let packagesPath: string[] = []
   for (const packagePath of readdirSync(packageDirPath)) {
@@ -59,7 +81,7 @@ export async function analyzePackages (packageDirPath: string, featureDirPath: s
   return packagesPath
 }
 
-export async function analyzePackagesMaster(packagesPath: string[], featureDirPath: string, featurePosDirPath: string) {
+export async function analyzePackagesMaster(packagesPath: string[], featureDirPath: string, featurePosDirPath: string, CallGraphDirPath: string, featureQueueDirPath: string) {
   // const workersCount = os.cpus().length
   // FIXME: use 8 workers for now because of the memory limit, or the program will be killed
   const workersCount = 8
@@ -73,7 +95,9 @@ export async function analyzePackagesMaster(packagesPath: string[], featureDirPa
         workerId: i,
         packagesPath: packagesPath.slice(start, end),
         featureDirPath,
-        featurePosDirPath
+        featurePosDirPath,
+        CallGraphDirPath,
+        featureQueueDirPath
       }
     })
     workers.push(worker)
@@ -86,10 +110,10 @@ export async function analyzePackagesMaster(packagesPath: string[], featureDirPa
 }
 
 export async function analyzePackagesWorker() {
-  const { workerId, packagesPath, featureDirPath, featurePosDirPath } = workerData
+  const { workerId, packagesPath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath } = workerData
   Logger.info(`Worker ${workerId} started`)
   for (const packagePath of packagesPath) {
-    await analyzeSinglePackage(packagePath, featureDirPath, featurePosDirPath)
+    await analyzeSinglePackage(packagePath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath)
   }
   Logger.info(`Worker ${workerId} finished`)
   if (parentPort) {

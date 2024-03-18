@@ -1,0 +1,72 @@
+import * as fs from 'fs/promises';
+
+interface GraphData {
+  fun2fun: [number, number][]; // Represents caller to callee relationships
+  entries: string[]; // Entry points for the call graph
+  files: string[]; // Files involved in the call graph
+  functions: { [key: string]: string }; // Function names mapped by index
+}
+
+interface CallQueueMap {
+  [fileName: string]: string[]; // Maps file name to a list of function call indices
+}
+
+/**
+ * Performs a Depth-First Search (DFS) traversal on a given call graph
+ * to identify the order of function calls starting from specified entry points,
+ * limiting the traversal depth to 3.
+ * 
+ * @param nodeIndex Index of the current node being visited.
+ * @param graphData Data representing the call graph.
+ * @param callQueueMap Map storing the sequence of function calls for each file.
+ * @param currentPath The current path of node indices visited during the traversal.
+ * @param fileName The name of the file being processed.
+ */
+function dfsTraversal(nodeIndex: number, graphData: GraphData, callQueueMap: CallQueueMap, currentPath: number[], fileName: string): void {
+  // Halt recursion if the depth reaches 3
+  if (currentPath.length >= 3) {
+    return;
+  }
+
+  callQueueMap[fileName] = callQueueMap[fileName] || [];
+  currentPath.push(nodeIndex);
+  callQueueMap[fileName].push(nodeIndex.toString());
+
+  // Iterate over function relationships
+  graphData.fun2fun.forEach(([caller, callee]) => {
+    if (caller === nodeIndex) {
+      dfsTraversal(callee, graphData, callQueueMap, [...currentPath], fileName);
+    }
+  });
+
+  currentPath.pop();
+}
+
+/**
+ * Initiates the traversal of the function call graph and writes the call queue
+ * to the specified output file. This function serves as the entry point for
+ * performing the DFS traversal on the provided call graph.
+ * 
+ * @param graphFilePath Path to the graph data file.
+ * @param outputPath Path where the output file will be written.
+ */
+export async function initiateTraversal(graphFilePath: string, outputPath: string): Promise<void> {
+  const graphData: GraphData = JSON.parse(await fs.readFile(graphFilePath, 'utf-8'));
+  const callQueueMap: CallQueueMap = {};
+
+  // Start DFS traversal from each entry point
+  graphData.entries.forEach(entry => {
+    const startNodeIndex = graphData.files.indexOf(entry);
+    if (startNodeIndex !== -1) {
+      Object.keys(graphData.functions).forEach(func => {
+        if (graphData.functions[func].startsWith(startNodeIndex.toString())) {
+          dfsTraversal(parseInt(func), graphData, callQueueMap, [], entry);
+        }
+      });
+    }
+  });
+
+  // Write the result to the specified output file
+  await fs.writeFile(outputPath, JSON.stringify(callQueueMap, null, 2), "utf8");
+  console.log(`Function call queue has been written to the file: ${outputPath}`);
+}

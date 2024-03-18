@@ -6,8 +6,8 @@
   "scripts": {
     "test": "jest",
     "compile": "webpack",
-    "debug":"webpack && cd dist && node --inspect-brk main.js -d /home/wwy/SerMalDetector/data/datasets /home/wwy/SerMalDetector/data/features /home/wwy/SerMalDetector/data/feature-positions",
-    "start": "webpack && cd dist && node main.js -d /home/wwy/SerMalDetector/data/datasets /home/wwy/SerMalDetector/data/features /home/wwy/SerMalDetector/data/feature-positions"
+    "debug": "webpack && cd dist && node --inspect-brk main.js -d /home/wwy/SerMalDetector/data/datasets /home/wwy/SerMalDetector/data/features /home/wwy/SerMalDetector/data/feature-positions",
+    "start": "webpack && cd dist && node main.js -d"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +16,7 @@
     "@babel/plugin-syntax-flow": "^7.18.6",
     "@babel/traverse": "^7.20.13",
     "@babel/types": "^7.20.7",
+    "@cs-au-dk/jelly": "^0.8.0",
     "@types/axios": "^0.14.0",
     "axios": "^1.2.6",
     "chalk": "^5.2.0",
