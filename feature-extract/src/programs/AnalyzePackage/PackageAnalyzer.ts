@@ -33,6 +33,7 @@ export async function analyzeSinglePackage(packagePath: string, featureDirPath: 
   const CallGraphFilePath = path.join(CallGraphDirPath, `${packageName}_cg.json`)
   try {
     await CallGraphForPackage(packagePath, CallGraphFilePath)
+    Logger.info(`Finished generating call graphs of ${packageName}, recorded at ${CallGraphFilePath}`)
   } catch (error) {
     Logger.error(getErrorInfo(error))
     return null
@@ -42,7 +43,8 @@ export async function analyzeSinglePackage(packagePath: string, featureDirPath: 
   const featurePosPath = path.join(featurePosDirPath, `${packageName}.json`)
   try {
     await extractFeatureFromPackage(packagePath, featureDirPath)
-    Logger.info(getAnalyzeResult(packageName, featurePosPath))
+    // Logger.info(getAnalyzeResult(packageName, featurePosPath))
+    Logger.info(`Finished extracting features of ${packageName}, recorded at ${featurePosPath}`)
     await promises.writeFile(featurePosPath, getConfig().positionRecorder!.serializeRecord())
   } catch (error) {
     Logger.error(getErrorInfo(error))
@@ -54,6 +56,7 @@ export async function analyzeSinglePackage(packagePath: string, featureDirPath: 
   const resultFilePath = path.join(SequentialFeatureDirPath, `${packageName}_result.json`)
   try {
     await serializeFeatures(featurePosPath, CallGraphFilePath, queueFilePath, resultFilePath)
+    Logger.info(`Finished serializing features of ${packageName}, recorded at ${resultFilePath}`)
   } catch (error) {
     Logger.error(getErrorInfo(error))
     return null

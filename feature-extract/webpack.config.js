@@ -19,7 +19,14 @@ module.exports = {
   mode: 'development',
   target: 'node',
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
+    alias: {
+      'express-handlebars': 'handlebars/dist/handlebars.js',
+      'ejs': 'ejs.min.js'
+    }
   },
-  devtool: 'source-map'
+  devtool: 'source-map',
+  stats: {
+    warnings: false,
+  }
 }

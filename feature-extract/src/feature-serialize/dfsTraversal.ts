@@ -68,6 +68,6 @@ export async function initiateTraversal(graphFilePath: string, outputPath: strin
 
   // Write the result to the specified output file
   await fs.writeFile(outputPath, JSON.stringify(callQueueMap, null, 2), "utf8");
-  console.log(`Function call queue has been written to the file: ${outputPath}`);
+  // console.log(`Function call queue has been written to the file: ${outputPath}`);
   return callQueueMap;
 }

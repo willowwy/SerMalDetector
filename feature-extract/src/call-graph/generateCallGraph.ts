@@ -21,7 +21,7 @@ export async function CallGraphForPackage(packagePath: string, CallGraphFilePath
             }
             // if (stdout) console.log(`Standard output for ${dirName}:`, stdout);
             // if (stderr) console.error(`Standard error for ${dirName}:`, stderr);
-            console.log(`Call graph generated for: ${dirName}`);
+            // console.log(`Call graph generated for: ${dirName}`);
             resolve();
         });
     });
