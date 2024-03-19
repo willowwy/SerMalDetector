@@ -7,7 +7,7 @@ interface GraphData {
   functions: { [key: string]: string }; // Function names mapped by index
 }
 
-interface CallQueueMap {
+export interface CallQueueMap {
   [fileName: string]: string[]; // Maps file name to a list of function call indices
 }
 
@@ -50,7 +50,7 @@ function dfsTraversal(nodeIndex: number, graphData: GraphData, callQueueMap: Cal
  * @param graphFilePath Path to the graph data file.
  * @param outputPath Path where the output file will be written.
  */
-export async function initiateTraversal(graphFilePath: string, outputPath: string): Promise<void> {
+export async function initiateTraversal(graphFilePath: string, outputPath: string): Promise<CallQueueMap> {
   const graphData: GraphData = JSON.parse(await fs.readFile(graphFilePath, 'utf-8'));
   const callQueueMap: CallQueueMap = {};
 
@@ -69,4 +69,5 @@ export async function initiateTraversal(graphFilePath: string, outputPath: strin
   // Write the result to the specified output file
   await fs.writeFile(outputPath, JSON.stringify(callQueueMap, null, 2), "utf8");
   console.log(`Function call queue has been written to the file: ${outputPath}`);
+  return callQueueMap;
 }

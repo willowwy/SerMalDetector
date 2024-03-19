@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "compile": "webpack",
-    "debug": "webpack && cd dist && node --inspect-brk main.js -d /home/wwy/SerMalDetector/data/datasets /home/wwy/SerMalDetector/data/features /home/wwy/SerMalDetector/data/feature-positions",
+    "jelly": "jelly -help",
     "start": "webpack && cd dist && node main.js -d"
   },
   "keywords": [],

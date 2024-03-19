@@ -30,7 +30,7 @@ export class PositionRecorder {
       }>;
     }>;
   }> = [];
-
+  // featurePosSet: featurePositions = { featurePositions: [] };
   addRecord(record: Record) {
     // Find or create the file object
     let fileObj = this.featurePosSet.find(f => f.filePath === record.filePath);
@@ -51,12 +51,6 @@ export class PositionRecorder {
       featureName: record.featureName,
       content: record.content
     };
-
-    // // Ensure the content object does not contain unwanted properties
-    // if (typeof featureObj.content !== 'string') {
-    //   delete featureObj.content.start.index;
-    //   delete featureObj.content.end.index;
-    // }
 
     funcObj.features.push(featureObj);
   }

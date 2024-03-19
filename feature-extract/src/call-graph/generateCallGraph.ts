@@ -15,13 +15,12 @@ export async function CallGraphForPackage(packagePath: string, CallGraphFilePath
 
         exec(command, (error, stdout, stderr) => {
             if (error) {
-                console.error(`Execution error for ${dirName}:`, error);
+                // Silently handle the error, only reject the promise without logging to console
                 reject(error);
                 return;
             }
-            if (stdout) console.log(`Standard output for ${dirName}:`, stdout);
-            if (stderr) console.error(`Standard error for ${dirName}:`, stderr);
-            
+            // if (stdout) console.log(`Standard output for ${dirName}:`, stdout);
+            // if (stderr) console.error(`Standard error for ${dirName}:`, stderr);
             console.log(`Call graph generated for: ${dirName}`);
             resolve();
         });

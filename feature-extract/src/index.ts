@@ -28,17 +28,18 @@ async function main() {
   const featurePosDirPath = '/home/wwy/SerMalDetector/data/feature-positions'
   const CallGraphDirPath = '/home/wwy/SerMalDetector/data/call-graphs'
   const featureQueueDirPath = '/home/wwy/SerMalDetector/data/func-queues'
+  const SequentialFeatureDirPath = '/home/wwy/SerMalDetector/data/result'
 
   try {
     if (option === '-d') {
       accessSync(packageOrDirPath, constants.F_OK | constants.R_OK)
-      const packagesPath = await analyzePackages(packageOrDirPath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath)
-      await analyzePackagesMaster(packagesPath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath)
+      const packagesPath = await analyzePackages(packageOrDirPath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath, SequentialFeatureDirPath)
+      await analyzePackagesMaster(packagesPath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath, SequentialFeatureDirPath)
       return
     } else
       if (option === '-p') {
         accessSync(packageOrDirPath, constants.F_OK | constants.R_OK)
-        await analyzeSinglePackage(packageOrDirPath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath)
+        await analyzeSinglePackage(packageOrDirPath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath, SequentialFeatureDirPath)
       } else {
         throw new Error('Invalid option. Please use -p or -d.')
       }
