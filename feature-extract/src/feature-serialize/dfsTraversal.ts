@@ -1,11 +1,6 @@
 import * as fs from 'fs/promises';
+import {CallGraph} from '../call-graph/generateCallGraph';
 
-interface GraphData {
-  fun2fun: [number, number][]; // Represents caller to callee relationships
-  entries: string[]; // Entry points for the call graph
-  files: string[]; // Files involved in the call graph
-  functions: { [key: string]: string }; // Function names mapped by index
-}
 
 export interface CallQueueMap {
   [fileName: string]: string[]; // Maps file name to a list of function call indices
@@ -22,7 +17,7 @@ export interface CallQueueMap {
  * @param currentPath The current path of node indices visited during the traversal.
  * @param fileName The name of the file being processed.
  */
-function dfsTraversal(nodeIndex: number, graphData: GraphData, callQueueMap: CallQueueMap, currentPath: number[], fileName: string): void {
+function dfsTraversal(nodeIndex: number, graphData: CallGraph, callQueueMap: CallQueueMap, currentPath: number[], fileName: string): void {
   // Halt recursion if the depth reaches 3
   if (currentPath.length >= 3) {
     return;
@@ -51,7 +46,7 @@ function dfsTraversal(nodeIndex: number, graphData: GraphData, callQueueMap: Cal
  * @param outputPath Path where the output file will be written.
  */
 export async function initiateTraversal(graphFilePath: string, outputPath: string): Promise<CallQueueMap> {
-  const graphData: GraphData = JSON.parse(await fs.readFile(graphFilePath, 'utf-8'));
+  const graphData: CallGraph = JSON.parse(await fs.readFile(graphFilePath, 'utf-8'));
   const callQueueMap: CallQueueMap = {};
 
   // Start DFS traversal from each entry point

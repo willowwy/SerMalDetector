@@ -2,7 +2,7 @@ import path from 'path'
 import promises from 'fs/promises'
 import { Worker, parentPort, workerData } from 'worker_threads'
 import { extractFeatureFromPackage } from '../../feature-extract'
-import { CallGraphForPackage } from '../../call-graph/generateCallGraph'
+import { generateCallGraphForPackage } from '../../call-graph/generateCallGraph'
 import { serializeFeatures } from '../../feature-serialize/SerializeFeatures'
 import { getErrorInfo } from '../../util'
 import { getConfig } from '../../config'
@@ -31,8 +31,9 @@ export async function analyzeSinglePackage(packagePath: string, featureDirPath: 
 
   //generate call graph
   const CallGraphFilePath = path.join(CallGraphDirPath, `${packageName}_cg.json`)
+  let CallGraph;
   try {
-    await CallGraphForPackage(packagePath, CallGraphFilePath)
+    CallGraph=await generateCallGraphForPackage(packagePath, CallGraphFilePath)
     Logger.info(`Finished generating call graphs of ${packageName}, recorded at ${CallGraphFilePath}`)
   } catch (error) {
     Logger.error(getErrorInfo(error))
@@ -42,8 +43,7 @@ export async function analyzeSinglePackage(packagePath: string, featureDirPath: 
   //extract feature
   const featurePosPath = path.join(featurePosDirPath, `${packageName}.json`)
   try {
-    await extractFeatureFromPackage(packagePath, featureDirPath)
-    // Logger.info(getAnalyzeResult(packageName, featurePosPath))
+    await extractFeatureFromPackage(packagePath, featureDirPath,CallGraph)
     Logger.info(`Finished extracting features of ${packageName}, recorded at ${featurePosPath}`)
     await promises.writeFile(featurePosPath, getConfig().positionRecorder!.serializeRecord())
   } catch (error) {

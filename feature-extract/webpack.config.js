@@ -20,10 +20,6 @@ module.exports = {
   target: 'node',
   resolve: {
     extensions: ['.ts', '.js'],
-    alias: {
-      'express-handlebars': 'handlebars/dist/handlebars.js',
-      'ejs': 'ejs.min.js'
-    }
   },
   devtool: 'source-map',
   stats: {

@@ -1,5 +1,6 @@
 /* eslint-disable no-lone-blocks */
 import path from 'path'
+import fs from 'fs'
 import { parse } from '@babel/core'
 import traverse from '@babel/traverse'
 import { type PackageFeatureInfo } from './PackageFeatureInfo'
@@ -13,6 +14,9 @@ import {
 } from './Patterns'
 import { getFileLogger } from '../FileLogger'
 import { type PositionRecorder, type Record } from './PositionRecorder'
+import { get } from 'http'
+import { resourceLimits } from 'worker_threads'
+import { CallGraph } from '../call-graph/generateCallGraph'
 
 const MAX_STRING_LENGTH = 66875
 
@@ -30,16 +34,46 @@ export async function extractFeaturesFromJSFileByAST(
   featureSet: PackageFeatureInfo,
   isInstallScript: boolean,
   targetJSFilePath: string,
-  positionRecorder: PositionRecorder
+  positionRecorder: PositionRecorder,
+  CallGraphData: CallGraph
 ): Promise<PackageFeatureInfo> {
-  function getRecord(path, featureName) {
+  function getRecord(path: any, featureName: string, CallGraphData: CallGraph) {
     return {
       filePath: targetJSFilePath,
-      functionName: Math.random().toString(),
+      functionName: getFuncNum(path, CallGraphData, targetJSFilePath),
       featureName: featureName,
       content: path.node.loc
     } as Record
   }
+
+  function getFuncNum(nodePath: any, jsonData: CallGraph, filePath: string): string | null {
+    const pathAfterPackage = filePath.split('/package/')[1] || 'Path does not contain "/package/".';
+    const fileIndex = jsonData.files.findIndex(PathinGraph => path.normalize(PathinGraph) === path.normalize(pathAfterPackage));
+
+    if (fileIndex === -1) {
+      console.error('File not found in JSON data.');
+      return null; // 如果找不到文件，返回null
+    }
+
+    const startLine = nodePath.node.loc.start.line;
+    const startColumn = nodePath.node.loc.start.column;
+    const endLine = nodePath.node.loc.end.line;
+    const endColumn = nodePath.node.loc.end.column;
+
+
+    for (const [funcNum, loc] of Object.entries(jsonData.functions)) {
+      const [fIndex, sLine, sColumn, eLine, eColumn] = loc.split(':').map(Number);
+      const isSameFile = fIndex === fileIndex;
+      const isWithinLineRange = startLine > sLine || (startLine === sLine && startColumn >= sColumn);
+      const isWithinEndLineRange = endLine < eLine || (endLine === eLine && endColumn <= eColumn);
+      if (isSameFile && isWithinLineRange && isWithinEndLineRange) {
+        return funcNum;
+      }
+    }
+    return null;
+  }
+
+
 
   const logger = await getFileLogger()
   let ast: any
@@ -64,10 +98,10 @@ export async function extractFeaturesFromJSFileByAST(
             path.node.arguments[0].value === 'base64-js'
           ) {
             featureSet.useBase64Conversion = true
-            positionRecorder.addRecord(getRecord(path, 'useBase64Conversion'))
+            positionRecorder.addRecord(getRecord(path, 'useBase64Conversion', CallGraphData))
             if (isInstallScript) {
               featureSet.useBase64ConversionInScript = true
-              positionRecorder.addRecord(getRecord(path, 'useBase64ConversionInScript'))
+              positionRecorder.addRecord(getRecord(path, 'useBase64ConversionInScript', CallGraphData))
             }
           }
           if (
@@ -76,10 +110,10 @@ export async function extractFeaturesFromJSFileByAST(
             path.node.arguments[0].value === 'child_process'
           ) {
             featureSet.useProcess = true
-            positionRecorder.addRecord(getRecord(path, 'useProcess'))
+            positionRecorder.addRecord(getRecord(path, 'useProcess', CallGraphData))
             if (isInstallScript) {
               featureSet.useProcessInScript = true
-              positionRecorder.addRecord(getRecord(path, 'useProcessInScript'))
+              positionRecorder.addRecord(getRecord(path, 'useProcessInScript', CallGraphData))
             }
           }
           if (path.node.arguments.length > 0) {
@@ -92,10 +126,10 @@ export async function extractFeaturesFromJSFileByAST(
               importModuleName === 'promise-fs'
             ) {
               featureSet.useFileSystem = true
-              positionRecorder.addRecord(getRecord(path, 'useFileSystem'))
+              positionRecorder.addRecord(getRecord(path, 'useFileSystem', CallGraphData))
               if (isInstallScript) {
                 featureSet.useFileSystemInScript = true
-                positionRecorder.addRecord(getRecord(path, 'useFileSystemInScript'))
+                positionRecorder.addRecord(getRecord(path, 'useFileSystemInScript', CallGraphData))
               }
             }
           }
@@ -113,10 +147,10 @@ export async function extractFeaturesFromJSFileByAST(
               moduleName === 'dns'
             ) {
               featureSet.useNetwork = true
-              positionRecorder.addRecord(getRecord(path, 'useNetwork'))
+              positionRecorder.addRecord(getRecord(path, 'useNetwork', CallGraphData))
               if (isInstallScript) {
                 featureSet.useNetworkInScript = true
-                positionRecorder.addRecord(getRecord(path, 'useNetworkInScript'))
+                positionRecorder.addRecord(getRecord(path, 'useNetworkInScript', CallGraphData))
               }
             }
           }
@@ -125,7 +159,7 @@ export async function extractFeaturesFromJSFileByAST(
             const moduleName = path.node.arguments[0].value as string
             if (moduleName === 'crypto' || moduleName === 'zlib') {
               featureSet.useEncryptAndEncode = true
-              positionRecorder.addRecord(getRecord(path, 'useEncryptAndEncode'))
+              positionRecorder.addRecord(getRecord(path, 'useEncryptAndEncode', CallGraphData))
             }
           }
         }
@@ -135,17 +169,17 @@ export async function extractFeaturesFromJSFileByAST(
           path.node.callee.object.name === 'os'
         ) {
           featureSet.useOperatingSystem = true
-          positionRecorder.addRecord(getRecord(path, 'useOperatingSystem'))
+          positionRecorder.addRecord(getRecord(path, 'useOperatingSystem', CallGraphData))
         }
       },
       StringLiteral: function (path) {
         const content = path.node.value
         if (content === 'base64') {
           featureSet.useBase64Conversion = true
-          positionRecorder.addRecord(getRecord(path, 'useBase64Conversion'))
+          positionRecorder.addRecord(getRecord(path, 'useBase64Conversion', CallGraphData))
           if (isInstallScript) {
             featureSet.useBase64ConversionInScript = true
-            positionRecorder.addRecord(getRecord(path, 'useBase64ConversionInScript'))
+            positionRecorder.addRecord(getRecord(path, 'useBase64ConversionInScript', CallGraphData))
           }
         }
         if (content.length >= MAX_STRING_LENGTH) {
@@ -155,17 +189,17 @@ export async function extractFeaturesFromJSFileByAST(
           const matchResult = content.match(IP_Pattern)
           if (matchResult != null) {
             featureSet.includeIP = true
-            positionRecorder.addRecord(getRecord(path, 'includeIP'))
+            positionRecorder.addRecord(getRecord(path, 'includeIP', CallGraphData))
           }
         }
         {
           const matchResult = content.match(base64_Pattern)
           if (matchResult != null) {
             featureSet.includeBase64String = true
-            positionRecorder.addRecord(getRecord(path, 'includeBase64String'))
+            positionRecorder.addRecord(getRecord(path, 'includeBase64String', CallGraphData))
             if (isInstallScript) {
               featureSet.includeBase64StringInScript = true
-              positionRecorder.addRecord(getRecord(path, 'includeBase64StringInScript'))
+              positionRecorder.addRecord(getRecord(path, 'includeBase64StringInScript', CallGraphData))
             }
           }
         }
@@ -177,7 +211,7 @@ export async function extractFeaturesFromJSFileByAST(
               featureSet.includeDomain = domainType
             }
             for (const domain of matchResult) {
-              positionRecorder.addRecord(getRecord(path, 'includeDomain'))
+              positionRecorder.addRecord(getRecord(path, 'includeDomain', CallGraphData))
             }
             if (isInstallScript) {
               const domainType = getDomainsType(matchResult)
@@ -185,7 +219,7 @@ export async function extractFeaturesFromJSFileByAST(
                 featureSet.includeDomainInScript = domainType
               }
               for (const domain of matchResult) {
-                positionRecorder.addRecord(getRecord(path, 'includeDomainInScript'))
+                positionRecorder.addRecord(getRecord(path, 'includeDomainInScript', CallGraphData))
               }
             }
           }
@@ -194,7 +228,7 @@ export async function extractFeaturesFromJSFileByAST(
           const matchResult = content.match(SensitiveStringPattern)
           if (matchResult != null) {
             featureSet.includeSensitiveFiles = true
-            positionRecorder.addRecord(getRecord(path, 'includeSensitiveFiles'))
+            positionRecorder.addRecord(getRecord(path, 'includeSensitiveFiles', CallGraphData))
           }
         }
       },
@@ -204,10 +238,10 @@ export async function extractFeaturesFromJSFileByAST(
           path.get('property').isIdentifier({ name: 'env' })
         ) {
           featureSet.useProcessEnv = true
-          positionRecorder.addRecord(getRecord(path, 'useProcessEnv'))
+          positionRecorder.addRecord(getRecord(path, 'useProcessEnv', CallGraphData))
           if (isInstallScript) {
             featureSet.useProcessEnvInScript = true
-            positionRecorder.addRecord(getRecord(path, 'useProcessEnvInScript'))
+            positionRecorder.addRecord(getRecord(path, 'useProcessEnvInScript', CallGraphData))
           }
         }
         if (
@@ -215,32 +249,32 @@ export async function extractFeaturesFromJSFileByAST(
           path.get('property').isIdentifier({ name: 'from' })
         ) {
           featureSet.useBuffer = true
-          positionRecorder.addRecord(getRecord(path, 'useBuffer'))
+          positionRecorder.addRecord(getRecord(path, 'useBuffer', CallGraphData))
         }
       },
       NewExpression: function (path) {
         // @ts-expect-error uselesss lint error
         if (path.node.callee.name === 'Buffer') {
           featureSet.useBuffer = true
-          positionRecorder.addRecord(getRecord(path, 'useBuffer'))
+          positionRecorder.addRecord(getRecord(path, 'useBuffer', CallGraphData))
         }
       },
       ImportDeclaration: function (path) {
         const moduleName = path.node.source.value
         if (path.node.source.value === 'base64-js') {
           featureSet.useBase64Conversion = true
-          positionRecorder.addRecord(getRecord(path, 'useBase64Conversion'))
+          positionRecorder.addRecord(getRecord(path, 'useBase64Conversion', CallGraphData))
           if (isInstallScript) {
             featureSet.useBase64ConversionInScript = true
-            positionRecorder.addRecord(getRecord(path, 'useBase64ConversionInScript'))
+            positionRecorder.addRecord(getRecord(path, 'useBase64ConversionInScript', CallGraphData))
           }
         }
         if (path.node.source.value === 'child_process') {
           featureSet.useProcess = true
-          positionRecorder.addRecord(getRecord(path, 'useProcess'))
+          positionRecorder.addRecord(getRecord(path, 'useProcess', CallGraphData))
           if (isInstallScript) {
             featureSet.useProcessInScript = true
-            positionRecorder.addRecord(getRecord(path, 'useProcessInScript'))
+            positionRecorder.addRecord(getRecord(path, 'useProcessInScript', CallGraphData))
           }
         }
         {
@@ -251,10 +285,10 @@ export async function extractFeaturesFromJSFileByAST(
             moduleName === 'promise-fs'
           ) {
             featureSet.useFileSystem = true
-            positionRecorder.addRecord(getRecord(path, 'useFileSystem'))
+            positionRecorder.addRecord(getRecord(path, 'useFileSystem', CallGraphData))
             if (isInstallScript) {
               featureSet.useFileSystemInScript = true
-              positionRecorder.addRecord(getRecord(path, 'useFileSystemInScript'))
+              positionRecorder.addRecord(getRecord(path, 'useFileSystemInScript', CallGraphData))
             }
           }
         }
@@ -270,27 +304,27 @@ export async function extractFeaturesFromJSFileByAST(
             moduleName === 'dns'
           ) {
             featureSet.useNetwork = true
-            positionRecorder.addRecord(getRecord(path, 'useNetwork'))
+            positionRecorder.addRecord(getRecord(path, 'useNetwork', CallGraphData))
             if (isInstallScript) {
               featureSet.useNetworkInScript = true
-              positionRecorder.addRecord(getRecord(path, 'useNetworkInScript'))
+              positionRecorder.addRecord(getRecord(path, 'useNetworkInScript', CallGraphData))
             }
           }
         }
         {
           if (moduleName === 'crypto' || moduleName === 'zlib') {
             featureSet.useEncryptAndEncode = true
-            positionRecorder.addRecord(getRecord(path, 'useEncryptAndEncode'))
+            positionRecorder.addRecord(getRecord(path, 'useEncryptAndEncode', CallGraphData))
           }
         }
       },
       Identifier: function (path) {
         if (path.node.name === 'eval') {
           featureSet.useEval = true
-          positionRecorder.addRecord(getRecord(path, 'useEval'))
+          positionRecorder.addRecord(getRecord(path, 'useEval', CallGraphData))
         } else if (path.node.name?.startsWith('_0x')) {
           featureSet.includeObfuscatedCode = true
-          positionRecorder.addRecord(getRecord(path, 'includeObfuscatedCode'))
+          positionRecorder.addRecord(getRecord(path, 'includeObfuscatedCode', CallGraphData))
         }
       }
     })

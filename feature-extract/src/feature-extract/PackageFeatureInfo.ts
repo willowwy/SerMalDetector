@@ -44,7 +44,7 @@ export interface PackageFeatureInfo {
  * Extract features from the npm package
  * @param packagePath the directory of the npm package, where there should be a package.json file
  */
-export async function getPackageFeatureInfo(packagePath: string): Promise<PackageFeatureInfo> {
+export async function getPackageFeatureInfo(packagePath: string, CallGraph: any): Promise<PackageFeatureInfo> {
   const positionRecorder = new PositionRecorder()
   const result: PackageFeatureInfo = {
     includeInstallScript: false,
@@ -174,7 +174,7 @@ export async function getPackageFeatureInfo(packagePath: string): Promise<Packag
             const jsFileContent = await promises.readFile(targetJSFilePath, { encoding: 'utf-8' })
             const fileInfo = await promises.stat(targetJSFilePath)
             if (fileInfo.size <= ALLOWED_MAX_JS_SIZE) {
-              await extractFeaturesFromJSFileByAST(jsFileContent, result, isInstallScriptFile, targetJSFilePath, positionRecorder)
+              await extractFeaturesFromJSFileByAST(jsFileContent, result, isInstallScriptFile, targetJSFilePath, positionRecorder, CallGraph)
               matchUseRegExp(jsFileContent, result, positionRecorder, targetJSFilePath)
             }
             resolve(true)

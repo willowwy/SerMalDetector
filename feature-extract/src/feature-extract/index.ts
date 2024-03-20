@@ -9,8 +9,8 @@ import { getPackageFeatureInfo, type PackageFeatureInfo } from './PackageFeature
  * @param featureDirPath directory of saving feature files
  * @returns the path of the feature file and feature information
  */
-export async function extractFeatureFromPackage (packagePath: string, featureDirPath: string) {
-  const result: PackageFeatureInfo = await getPackageFeatureInfo(packagePath)
+export async function extractFeatureFromPackage(packagePath: string, featureDirPath: string, CallGraph: any) {
+  const result: PackageFeatureInfo = await getPackageFeatureInfo(packagePath, CallGraph)
   // const packageName = path.basename(path.dirname(packagePath))
   const packageName = path.basename(packagePath)
   const csvPath = path.join(featureDirPath, `${packageName}.csv`)
