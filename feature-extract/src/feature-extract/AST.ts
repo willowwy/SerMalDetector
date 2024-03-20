@@ -10,7 +10,8 @@ import {
   getDomainPattern,
   IP_Pattern,
   SensitiveStringPattern,
-  getDomainsType
+  getDomainsType,
+  byteString_Pattern
 } from './Patterns'
 import { getFileLogger } from '../FileLogger'
 import { type PositionRecorder, type Record } from './PositionRecorder'
@@ -19,6 +20,7 @@ import { resourceLimits } from 'worker_threads'
 import { CallGraph } from '../call-graph/generateCallGraph'
 
 const MAX_STRING_LENGTH = 66875
+
 
 /**
  * Analyze the JavaScript code by AST and extract the feature information.
@@ -51,7 +53,7 @@ export async function extractFeaturesFromJSFileByAST(
     const fileIndex = jsonData.files.findIndex(PathinGraph => path.normalize(PathinGraph) === path.normalize(pathAfterPackage));
 
     if (fileIndex === -1) {
-      console.error('File not found in JSON data.');
+      // console.error('File not found in JSON data.');
       return null; // 如果找不到文件，返回null
     }
 
@@ -70,6 +72,7 @@ export async function extractFeaturesFromJSFileByAST(
         return funcNum;
       }
     }
+    console.error('Function not found in JSON data.');
     return null;
   }
 
@@ -133,6 +136,7 @@ export async function extractFeaturesFromJSFileByAST(
               }
             }
           }
+
           if (path.node.arguments.length > 0) {
             // @ts-expect-error uselesss lint error
             const moduleName = path.node.arguments[0].value as string
@@ -196,10 +200,10 @@ export async function extractFeaturesFromJSFileByAST(
           const matchResult = content.match(base64_Pattern)
           if (matchResult != null) {
             featureSet.includeBase64String = true
-            positionRecorder.addRecord(getRecord(path, 'includeBase64String', CallGraphData))
+            // positionRecorder.addRecord(getRecord(path, 'includeBase64String', CallGraphData))
             if (isInstallScript) {
               featureSet.includeBase64StringInScript = true
-              positionRecorder.addRecord(getRecord(path, 'includeBase64StringInScript', CallGraphData))
+              // positionRecorder.addRecord(getRecord(path, 'includeBase64StringInScript', CallGraphData))
             }
           }
         }
@@ -229,6 +233,19 @@ export async function extractFeaturesFromJSFileByAST(
           if (matchResult != null) {
             featureSet.includeSensitiveFiles = true
             positionRecorder.addRecord(getRecord(path, 'includeSensitiveFiles', CallGraphData))
+          }
+        }
+        {
+          const matchResult = code.match(byteString_Pattern)
+          if (matchResult != null) {
+            featureSet.includeByteString = true
+            positionRecorder.addRecord(getRecord(path, 'includeByteString', CallGraphData))
+            // positionRecorder.addRecord({
+            //   filePath: targetJSFilePath,
+            //   functionName: getFuncNum(path, CallGraphData, targetJSFilePath),
+            //   featureName: 'includeByteString',
+            //   content: matchResult[1]
+            // })
           }
         }
       },

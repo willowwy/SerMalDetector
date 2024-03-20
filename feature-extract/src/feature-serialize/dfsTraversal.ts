@@ -18,8 +18,8 @@ export interface CallQueueMap {
  * @param fileName The name of the file being processed.
  */
 function dfsTraversal(nodeIndex: number, graphData: CallGraph, callQueueMap: CallQueueMap, currentPath: number[], fileName: string): void {
-  // Halt recursion if the depth reaches 3
-  if (currentPath.length >= 3) {
+  // Halt recursion if the depth reaches
+  if (currentPath.length >= 5) {
     return;
   }
 
@@ -62,7 +62,7 @@ export async function initiateTraversal(graphFilePath: string, outputPath: strin
   });
 
   // Write the result to the specified output file
-  await fs.writeFile(outputPath, JSON.stringify(callQueueMap, null, 2), "utf8");
+  // await fs.writeFile(outputPath, JSON.stringify(callQueueMap, null, 2), "utf8");
   // console.log(`Function call queue has been written to the file: ${outputPath}`);
   return callQueueMap;
 }

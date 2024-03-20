@@ -65,18 +65,17 @@ export async function serializeFeatures(featurePosFilePath: string, CallGraphFil
 
     // Correlate file paths with lists of feature names.
     Object.entries(Filetofuncs).forEach(([filePath, functionNames]) => {
-        const featuresSet = new Set<string>();
+        const featuresList: string[] = []; 
 
         // Aggregate features for each function found in the file.
         functionNames.forEach(functionName => {
             const features = FunctoFeatures[functionName];
             if (features) {
-                features.forEach(featureName => featuresSet.add(featureName));
+                featuresList.push(...features);
             }
         });
 
-        // Convert the set of features to an array and map it to the file path.
-        FiletoFeatures[filePath] = Array.from(featuresSet);
+        FiletoFeatures[filePath] = featuresList;
     });
 
     // Optionally, write the result to a file.

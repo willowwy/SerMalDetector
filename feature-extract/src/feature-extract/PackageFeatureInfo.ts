@@ -4,7 +4,7 @@ import { getPackageJSONInfo, type PackageJSONInfo } from './PackageJSONInfo'
 import { getDomainPattern, IP_Pattern, Network_Command_Pattern, SensitiveStringPattern, getDomainsType } from './Patterns'
 import { getAllJSFilesInInstallScript } from './GetInstallScripts'
 import { extractFeaturesFromJSFileByAST } from './AST'
-import { matchUseRegExp } from './RegExp'
+// import { matchUseRegExp } from './RegExp'
 import { PositionRecorder } from './PositionRecorder'
 import { setPositionRecorder } from '../config'
 import { getPackageFromDir } from '../util'
@@ -175,7 +175,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
             const fileInfo = await promises.stat(targetJSFilePath)
             if (fileInfo.size <= ALLOWED_MAX_JS_SIZE) {
               await extractFeaturesFromJSFileByAST(jsFileContent, result, isInstallScriptFile, targetJSFilePath, positionRecorder, CallGraph)
-              matchUseRegExp(jsFileContent, result, positionRecorder, targetJSFilePath)
+              // matchUseRegExp(jsFileContent, result, positionRecorder, targetJSFilePath)
             }
             resolve(true)
           }, 0)

@@ -1,5 +1,3 @@
-import { type PackageFeatureInfo } from './PackageFeatureInfo';
-
 export interface Record {
   filePath: string;
   functionName: string;
@@ -30,7 +28,7 @@ export class PositionRecorder {
       }>;
     }>;
   }> = [];
-  // featurePosSet: featurePositions = { featurePositions: [] };
+
   addRecord(record: Record) {
     // Find or create the file object
     let fileObj = this.featurePosSet.find(f => f.filePath === record.filePath);

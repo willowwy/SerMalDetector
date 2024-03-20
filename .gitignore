@@ -1,6 +1,7 @@
 # Ignore node_modules directory
 .idea/
 .vscode/
+.venv/
 data/
 feature-extract/.vscode
 feature-extract/node_modules/

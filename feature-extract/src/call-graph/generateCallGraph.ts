@@ -42,7 +42,7 @@ async function readJsonData(jsonFilePath: string): Promise<CallGraph> {
  */
 export async function generateCallGraphForPackage(packagePath: string, callGraphFilePath: string): Promise<CallGraph> {
     const packageDirectory = path.join(packagePath, "package");
-    const command = `npx jelly -j ${callGraphFilePath} ${packageDirectory}`;
+    const command = `npx jelly -j ${callGraphFilePath} ${packageDirectory} -m /home/wwy/SerMalDetector/data/call-graphs/cg.html`;
 
     // Execute the command to generate the call graph
     await new Promise<void>((resolve, reject) => {

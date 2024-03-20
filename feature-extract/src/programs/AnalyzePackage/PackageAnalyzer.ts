@@ -41,7 +41,7 @@ export async function analyzeSinglePackage(packagePath: string, featureDirPath: 
   }
 
   //extract feature
-  const featurePosPath = path.join(featurePosDirPath, `${packageName}.json`)
+  const featurePosPath = path.join(featurePosDirPath, `${packageName}_fp.json`)
   try {
     await extractFeatureFromPackage(packagePath, featureDirPath,CallGraph)
     Logger.info(`Finished extracting features of ${packageName}, recorded at ${featurePosPath}`)
