@@ -12,6 +12,7 @@ function showUsage() {
 \t$feature_pos_dir_path is absolute path to the parent directory of the feature position files.`
   )
 }
+export const dfsDepthLimit = 10
 
 async function main() {
   // if (process.argv.length === 6) {
@@ -23,12 +24,14 @@ async function main() {
   // const featureQueueDirPath = process.argv[7]
 
   const option = '-d'
-  const packageOrDirPath = '/home/wwy/SerMalDetector/data/datasets'
+  
+  const packageOrDirPath = '/home/wwy/SerMalDetector/data/.decompressed-packages'
   const featureDirPath = '/home/wwy/SerMalDetector/data/features'
   const featurePosDirPath = '/home/wwy/SerMalDetector/data/feature-positions'
   const CallGraphDirPath = '/home/wwy/SerMalDetector/data/call-graphs'
   const featureQueueDirPath = '/home/wwy/SerMalDetector/data/func-queues'
   const SequentialFeatureDirPath = '/home/wwy/SerMalDetector/data/result'
+  
 
   try {
     if (option === '-d') {

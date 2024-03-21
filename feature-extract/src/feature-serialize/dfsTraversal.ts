@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import {CallGraph} from '../call-graph/generateCallGraph';
-
+import { dfsDepthLimit } from '../index';
 
 export interface CallQueueMap {
   [fileName: string]: string[]; // Maps file name to a list of function call indices
@@ -17,9 +17,10 @@ export interface CallQueueMap {
  * @param currentPath The current path of node indices visited during the traversal.
  * @param fileName The name of the file being processed.
  */
+//……
 function dfsTraversal(nodeIndex: number, graphData: CallGraph, callQueueMap: CallQueueMap, currentPath: number[], fileName: string): void {
-  // Halt recursion if the depth reaches
-  if (currentPath.length >= 5) {
+  // Halt recursion if the depth reaches global limit or detects a cycle (depth of 3 for cycles)
+  if (currentPath.length > dfsDepthLimit || (currentPath.includes(nodeIndex) && currentPath.length - currentPath.indexOf(nodeIndex) > 3)) {
     return;
   }
 
@@ -36,6 +37,7 @@ function dfsTraversal(nodeIndex: number, graphData: CallGraph, callQueueMap: Cal
 
   currentPath.pop();
 }
+
 
 /**
  * Initiates the traversal of the function call graph and writes the call queue

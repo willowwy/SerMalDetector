@@ -32,7 +32,6 @@ async function preProcessFeaturePositions(featurePosFilePath: string): Promise<F
     try {
         const rawData = await fs.readFile(featurePosFilePath, 'utf8');
         const featurePositions: FeaturePositionsArray = JSON.parse(rawData);
-
         const functionToFeaturesMap: FeatureMapping = {};
 
         // Iterate over each feature position to map function names to their features.
@@ -63,6 +62,11 @@ export async function serializeFeatures(featurePosFilePath: string, CallGraphFil
     const FunctoFeatures = await preProcessFeaturePositions(featurePosFilePath);
     const FiletoFeatures: { [key: string]: string[] } = {};
 
+    // Check if 'packageJSON' key exists in FunctoFeatures and store the associated features.
+    if ('packageJSON' in FunctoFeatures) {
+        FiletoFeatures['package.json'] = FunctoFeatures['packageJSON'];
+    }
+    
     // Correlate file paths with lists of feature names.
     Object.entries(Filetofuncs).forEach(([filePath, functionNames]) => {
         const featuresList: string[] = []; 

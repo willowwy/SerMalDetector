@@ -86,7 +86,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
       if (packageJSONInfo.includeInstallScript) {
         positionRecorder.addRecord({
           filePath: packageJSONPath,
-          functionName: 'N/A',
+          functionName: 'packageJSON',
           featureName: 'includeInstallScript',
           content: packageJSONInfo.installCommand[0]
         });
@@ -100,7 +100,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
             result.includeIP = true
             positionRecorder.addRecord({
               filePath: packageJSONPath,
-              functionName: 'N/A',
+              functionName: 'packageJSON',
               featureName: 'includeIP',
               content: scriptContent
             });
@@ -116,7 +116,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
             for (const domain of matchResult) {
               positionRecorder.addRecord({
                 filePath: packageJSONPath,
-                functionName: 'N/A',
+                functionName: 'packageJSON',
                 featureName: 'includeDomainInScript',
                 content: domain
               });
@@ -129,7 +129,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
             result.useNetworkInScript = true
             positionRecorder.addRecord({
               filePath: packageJSONPath,
-              functionName: 'N/A',
+              functionName: 'packageJSON',
               featureName: 'useNetworkInScript',
               content: scriptContent
             });
@@ -142,7 +142,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
             for (const sensitiveString of matchResult) {
               positionRecorder.addRecord({
                 filePath: packageJSONPath,
-                functionName: 'N/A',
+                functionName: 'packageJSON',
                 featureName: 'includeSensitiveFiles',
                 content: sensitiveString
               });
