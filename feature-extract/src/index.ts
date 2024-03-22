@@ -26,7 +26,7 @@ async function main() {
   const option = '-d'
   
   const packageOrDirPath = '/home/wwy/SerMalDetector/data/.decompressed-packages'
-  const featureDirPath = '/home/wwy/SerMalDetector/data/features'
+  // const featureDirPath = '/home/wwy/SerMalDetector/data/features'
   const featurePosDirPath = '/home/wwy/SerMalDetector/data/feature-positions'
   const CallGraphDirPath = '/home/wwy/SerMalDetector/data/call-graphs'
   const SequentialFeatureDirPath = '/home/wwy/SerMalDetector/data/result'
@@ -35,13 +35,13 @@ async function main() {
   try {
     if (option === '-d') {
       accessSync(packageOrDirPath, constants.F_OK | constants.R_OK)
-      const packagesPath = await analyzePackages(packageOrDirPath, featureDirPath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
-      await analyzePackagesMaster(packagesPath, featureDirPath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
+      const packagesPath = await analyzePackages(packageOrDirPath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
+      await analyzePackagesMaster(packagesPath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
       return
     } else
       if (option === '-p') {
         accessSync(packageOrDirPath, constants.F_OK | constants.R_OK)
-        await analyzeSinglePackage(packageOrDirPath, featureDirPath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
+        await analyzeSinglePackage(packageOrDirPath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
       } else {
         throw new Error('Invalid option. Please use -p or -d.')
       }

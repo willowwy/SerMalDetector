@@ -12,64 +12,16 @@ import { Logger } from '../Logger'
 
 const ALLOWED_MAX_JS_SIZE = 2 * 1024 * 1024
 
-export interface PackageFeatureInfo {
-  includeInstallScript: boolean
-  includeIP: boolean
-  useBase64Conversion: boolean
-  useBase64ConversionInScript: boolean
-  includeBase64String: boolean
-  includeBase64StringInScript: boolean
-  includeDomain: number
-  includeDomainInScript: number
-  includeByteString: boolean
-  useBuffer: boolean
-  useEval: boolean
-  useProcess: boolean
-  useProcessInScript: boolean
-  useFileSystem: boolean
-  useFileSystemInScript: boolean
-  useNetwork: boolean
-  useNetworkInScript: boolean
-  useProcessEnv: boolean
-  useProcessEnvInScript: boolean
-  useEncryptAndEncode: boolean
-  useOperatingSystem: boolean
-  includeObfuscatedCode: boolean
-  includeSensitiveFiles: boolean
-  installCommand: string[]
-  executeJSFiles: string[]
-}
-
 /**
  * Extract features from the npm package
  * @param packagePath the directory of the npm package, where there should be a package.json file
  */
-export async function getPackageFeatureInfo(packagePath: string, CallGraph: any): Promise<PackageFeatureInfo> {
+export async function getPackageFeatureInfo(packagePath: string, CallGraph: any): Promise<void> {
   const positionRecorder = new PositionRecorder()
-  const result: PackageFeatureInfo = {
-    includeInstallScript: false,
-    includeIP: false,
-    useBase64Conversion: false,
-    useBase64ConversionInScript: false,
-    includeBase64String: false,
-    includeBase64StringInScript: false,
-    includeByteString: false,
-    includeDomain: 0,
-    includeDomainInScript: 0,
-    useBuffer: false,
-    useEval: false,
-    useProcess: false,
-    useProcessInScript: false,
-    useFileSystem: false,
-    useFileSystemInScript: false,
-    useNetwork: false,
-    useNetworkInScript: false,
-    useProcessEnv: false,
-    useProcessEnvInScript: false,
-    useEncryptAndEncode: false,
-    useOperatingSystem: false,
-    includeObfuscatedCode: false,
-    includeSensitiveFiles: false,
+  const result: PackageJSONInfo = {
+  dependencyNumber: 0,
+  devDependencyNumber: 0,
+  includeInstallScript: false,
     installCommand: [],
     executeJSFiles: [],
   }
@@ -97,7 +49,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
         {
           const matchResult = scriptContent.match(IP_Pattern)
           if (matchResult != null) {
-            result.includeIP = true
+            // result.includeIP = true
             positionRecorder.addRecord({
               filePath: packageJSONPath,
               functionName: 'packageJSON',
@@ -110,9 +62,9 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
           const matchResult = scriptContent.match(getDomainPattern())
           if (matchResult != null) {
             const domainType = getDomainsType(matchResult)
-            if (result.includeDomainInScript < domainType) {
-              result.includeDomainInScript = domainType
-            }
+            // if (result.includeDomainInScript < domainType) {
+            //   result.includeDomainInScript = domainType
+            // }
             for (const domain of matchResult) {
               positionRecorder.addRecord({
                 filePath: packageJSONPath,
@@ -126,7 +78,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
         {
           const matchResult = scriptContent.match(Network_Command_Pattern)
           if (matchResult != null) {
-            result.useNetworkInScript = true
+            // result.useNetworkInScript = true
             positionRecorder.addRecord({
               filePath: packageJSONPath,
               functionName: 'packageJSON',
@@ -138,7 +90,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
         {
           const matchResult = scriptContent.match(SensitiveStringPattern)
           if (matchResult != null) {
-            result.includeSensitiveFiles = true
+            // result.includeSensitiveFiles = true
             for (const sensitiveString of matchResult) {
               positionRecorder.addRecord({
                 filePath: packageJSONPath,
@@ -187,5 +139,5 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
   }
   await traverseDir(packagePath)
   setPositionRecorder(positionRecorder)
-  return result
+  return
 }
