@@ -174,7 +174,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
             const jsFileContent = await promises.readFile(targetJSFilePath, { encoding: 'utf-8' })
             const fileInfo = await promises.stat(targetJSFilePath)
             if (fileInfo.size <= ALLOWED_MAX_JS_SIZE) {
-              await extractFeaturesFromJSFileByAST(jsFileContent, result, isInstallScriptFile, targetJSFilePath, positionRecorder, CallGraph)
+              await extractFeaturesFromJSFileByAST(jsFileContent, isInstallScriptFile, targetJSFilePath, positionRecorder, CallGraph)
               // matchUseRegExp(jsFileContent, result, positionRecorder, targetJSFilePath)
             }
             resolve(true)

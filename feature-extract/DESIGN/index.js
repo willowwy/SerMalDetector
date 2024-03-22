@@ -4,9 +4,6 @@ import path from "path";
 import CallGraphForSubdirectory from "./generateCallGraph";
 import { initiateTraversal } from "./dfsTraversal";
 
-// const DB_DIRECTORY_PATH = "../data/datasets";
-// const CG_DIRECTORY_PATH = "../data/call-graphs";
-// const QUEUE_DIRECTORY_PATH = "../data/func-queue";
 
 /**
  * Traverses the root directory, generates call graphs and traversal queues for each subdirectory,

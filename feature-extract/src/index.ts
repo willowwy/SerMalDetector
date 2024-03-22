@@ -12,7 +12,7 @@ function showUsage() {
 \t$feature_pos_dir_path is absolute path to the parent directory of the feature position files.`
   )
 }
-export const dfsDepthLimit = 10
+export const dfsDepthLimit = 5
 
 async function main() {
   // if (process.argv.length === 6) {
@@ -29,20 +29,19 @@ async function main() {
   const featureDirPath = '/home/wwy/SerMalDetector/data/features'
   const featurePosDirPath = '/home/wwy/SerMalDetector/data/feature-positions'
   const CallGraphDirPath = '/home/wwy/SerMalDetector/data/call-graphs'
-  const featureQueueDirPath = '/home/wwy/SerMalDetector/data/func-queues'
   const SequentialFeatureDirPath = '/home/wwy/SerMalDetector/data/result'
   
 
   try {
     if (option === '-d') {
       accessSync(packageOrDirPath, constants.F_OK | constants.R_OK)
-      const packagesPath = await analyzePackages(packageOrDirPath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath, SequentialFeatureDirPath)
-      await analyzePackagesMaster(packagesPath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath, SequentialFeatureDirPath)
+      const packagesPath = await analyzePackages(packageOrDirPath, featureDirPath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
+      await analyzePackagesMaster(packagesPath, featureDirPath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
       return
     } else
       if (option === '-p') {
         accessSync(packageOrDirPath, constants.F_OK | constants.R_OK)
-        await analyzeSinglePackage(packageOrDirPath, featureDirPath, featurePosDirPath, CallGraphDirPath, featureQueueDirPath, SequentialFeatureDirPath)
+        await analyzeSinglePackage(packageOrDirPath, featureDirPath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
       } else {
         throw new Error('Invalid option. Please use -p or -d.')
       }

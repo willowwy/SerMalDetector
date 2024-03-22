@@ -57,8 +57,8 @@ async function preProcessFeaturePositions(featurePosFilePath: string): Promise<F
  * @param funcQueueDirPath - Directory path where the function queue files are stored.
  * @returns A promise that resolves to an object mapping file paths to arrays of feature names.
  */
-export async function serializeFeatures(featurePosFilePath: string, CallGraphFilePath: string, funcQueueDirPath: string, resultFilePath: string): Promise<{ [key: string]: string[] }> {
-    const Filetofuncs = await initiateTraversal(CallGraphFilePath, funcQueueDirPath);
+export async function serializeFeatures(featurePosFilePath: string, CallGraphFilePath: string, resultFilePath: string): Promise<{ [key: string]: string[] }> {
+    const Filetofuncs = await initiateTraversal(CallGraphFilePath);
     const FunctoFeatures = await preProcessFeaturePositions(featurePosFilePath);
     const FiletoFeatures: { [key: string]: string[] } = {};
 
