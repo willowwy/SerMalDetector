@@ -16,16 +16,24 @@ import { readdirSync } from 'fs'
  * @param featurePosDirPath the absolute directory path to save feature position files
  * @returns the result of extracting features
  */
-export async function analyzeSinglePackage(packagePath: string, featurePosDirPath: string, CallGraphDirPath: string, SequentialFeatureDirPath: string) {
+export async function analyzeSinglePackage(
+  packagePath: string,
+  featurePosDirPath: string,
+  CallGraphDirPath: string,
+  SequentialFeatureDirPath: string) {
   const packageName = path.basename(packagePath)
   const actualPackagePath = await getPackageFromDir(packagePath)
+  if (!actualPackagePath) {
+    Logger.warning("Package "+ packageName + " is empty or without package.json");
+    return null;
+  }
+
   //generate call graph
   const CallGraphFilePath = path.join(CallGraphDirPath, `${packageName}_cg.json`)
   let CallGraph;
   try {
     CallGraph = await generateCallGraphForPackage(actualPackagePath, CallGraphFilePath)
     if (CallGraph) { Logger.info(`Finished generating call graphs of ${packageName}, recorded at ${CallGraphFilePath}`) }
-    else { Logger.warning("The call graph file is empty."); return null }
   } catch (error) {
     Logger.error(getErrorInfo(error))
     return null
@@ -45,7 +53,7 @@ export async function analyzeSinglePackage(packagePath: string, featurePosDirPat
   //serialize features
   const resultFilePath = path.join(SequentialFeatureDirPath, `${packageName}_rst.json`)
   try {
-    await serializeFeatures(featurePosPath, CallGraphFilePath, resultFilePath)
+    await serializeFeatures(featurePosPath, CallGraph, resultFilePath)
     Logger.info(`Finished serializing features of ${packageName}, recorded at ${resultFilePath}`)
   } catch (error) {
     Logger.error(getErrorInfo(error))
@@ -59,7 +67,6 @@ export async function analyzeSinglePackage(packagePath: string, featurePosDirPat
  * @param featurePosDirPath the absolute directory path to save feature position files
  */
 export async function analyzePackages(packageDirPath: string, featurePosDirPath: string, CallGraphDirPath: string, SequentialFeatureDirPath: string) {
-  // try { await promises.mkdir(featureDirPath) } catch (e) { }
   try { await promises.mkdir(featurePosDirPath) } catch (e) { }
   try { await promises.mkdir(CallGraphDirPath) } catch (e) { }
   try { await promises.mkdir(SequentialFeatureDirPath) } catch (e) { }
@@ -95,18 +102,18 @@ export async function analyzePackagesMaster(packagesPath: string[], featurePosDi
   }
   for (const worker of workers) {
     worker.on('exit', (exitCode: number) => {
-      Logger.info(`Worker stopped with exit code ${exitCode}`)
+      // Logger.info(`Worker stopped with exit code ${exitCode}`)
     })
   }
 }
 
 export async function analyzePackagesWorker() {
   const { workerId, packagesPath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath } = workerData
-  Logger.info(`Worker ${workerId} started`)
+  // Logger.info(`Worker ${workerId} started`)
   for (const packagePath of packagesPath) {
     await analyzeSinglePackage(packagePath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
   }
-  Logger.info(`Worker ${workerId} finished`)
+  // Logger.info(`Worker ${workerId} finished`)
   if (parentPort) {
     parentPort.postMessage(`Worker ${workerId} finished`)
   }

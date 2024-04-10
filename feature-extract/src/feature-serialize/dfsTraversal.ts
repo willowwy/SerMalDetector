@@ -47,8 +47,7 @@ function dfsTraversal(nodeIndex: number, graphData: CallGraph, callQueueMap: Cal
  * @param graphFilePath Path to the graph data file.
  * @param outputPath Path where the output file will be written.
  */
-export async function initiateTraversal(graphFilePath: string): Promise<CallQueueMap> {
-  const graphData: CallGraph = JSON.parse(await fs.readFile(graphFilePath, 'utf-8'));
+export async function initiateTraversal(graphData: any): Promise<CallQueueMap> {
   const callQueueMap: CallQueueMap = {};
 
   // Start DFS traversal from each entry point

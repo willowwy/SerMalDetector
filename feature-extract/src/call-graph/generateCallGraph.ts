@@ -1,6 +1,11 @@
 import { exec } from 'child_process';
-import path from 'path';
+import { promisify } from 'util';
 import fs from 'fs';
+import { Logger } from '../Logger';
+
+const execAsync = promisify(exec);
+const readFileAsync = promisify(fs.readFile);
+const readdirAsync = fs.promises.readdir;
 
 export interface CallGraph {
     entries: string[];
@@ -16,20 +21,13 @@ export interface CallGraph {
  * @returns A promise that resolves to a CallGraph object.
  */
 async function readJsonData(jsonFilePath: string): Promise<CallGraph> {
-    return new Promise((resolve, reject) => {
-        fs.readFile(jsonFilePath, 'utf8', (err, data) => {
-            if (err) {
-                reject(new Error(`Failed to read JSON file: ${err.message}`));
-                return;
-            }
-            try {
-                const jsonData: CallGraph = JSON.parse(data);
-                resolve(jsonData);
-            } catch (parseError) {
-                reject(new Error(`Failed to parse JSON file: ${parseError.message}`));
-            }
-        });
-    });
+    try {
+        const data = await readFileAsync(jsonFilePath, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        Logger.error(`Error reading or parsing JSON file: ${error.message}`);
+        throw error; // Re-throw the error after logging it
+    }
 }
 
 /**
@@ -41,20 +39,29 @@ async function readJsonData(jsonFilePath: string): Promise<CallGraph> {
  * @returns A promise that resolves to the call graph data read from the generated file.
  */
 export async function generateCallGraphForPackage(packagePath: string, callGraphFilePath: string): Promise<CallGraph> {
-    const packageDirectory = path.join(packagePath, "package");
-    const command = `npx jelly -j ${callGraphFilePath} ${packageDirectory}`;
+    // Check if the package directory is empty or missing package.json
+    try {
+        const files = await readdirAsync(packagePath);
+        if (files.length === 0) {
+            Logger.warning(`The package directory at ${packagePath} is empty. The process will stop.`);
+            process.exit();
+        } else if (!files.includes('package.json')) {
+            Logger.warning(`No package.json found in the package directory at ${packagePath}. This package may not conform to standards. The process will stop.`);
+            process.exit();
+        }
+    } catch (error) {
+        Logger.error(`Failed to read the package directory: ${error.message}`);
+        throw error; // Re-throw the error after logging it
+    }
+    
+    const command = `node --max-old-space-size=8192 $(which npx) jelly -j ${callGraphFilePath} ${packagePath} --ignore-unresolved --no-callgraph-implicit --no-callgraph-native --no-callgraph-external`;
 
-    // Execute the command to generate the call graph
-    await new Promise<void>((resolve, reject) => {
-        exec(command, (error) => {
-            if (error) {
-                reject(new Error(`Failed to generate call graph: ${error.message}`));
-                return;
-            }
-            resolve();
-        });
-    });
+    try {
+        await execAsync(command);
+    } catch (error) {
+        Logger.error(`Failed to generate call graph: ${error.message}`);
+        throw error; // Re-throw the error after logging it
+    }
 
-    // After the call graph has been generated, read and return it
     return await readJsonData(callGraphFilePath);
 }

@@ -50,15 +50,17 @@ export async function extractFeaturesFromJSFileByAST(
     const fileIndex = jsonData.files.findIndex(PathinGraph => path.normalize(PathinGraph) === path.normalize(relativePath));
 
     if (fileIndex === -1) {
-      // Logger.error(filePath + 'not found in JSON data.');
-      return null; 
+      Logger.error(filePath + 'not found in CallGraph JSON data.');
+      return null;
     }
 
     const startLine = nodePath.node.loc.start.line;
-    const startColumn = nodePath.node.loc.start.column;
+    const startColumn = nodePath.node.loc.start.column + 1;
     const endLine = nodePath.node.loc.end.line;
-    const endColumn = nodePath.node.loc.end.column;
-
+    const endColumn = nodePath.node.loc.end.column + 1;
+    if (endColumn === 55) {
+      console.log("yeah!")
+    }
 
     for (const [funcNum, loc] of Object.entries(jsonData.functions)) {
       const [fIndex, sLine, sColumn, eLine, eColumn] = loc.split(':').map(Number);
@@ -69,7 +71,7 @@ export async function extractFeaturesFromJSFileByAST(
         return funcNum;
       }
     }
-    Logger.error('Function not found in JSON data in'+ filePath);
+    Logger.error('Function not found in CallGraph JSON data in' + filePath);
     return null;
   }
 

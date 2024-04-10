@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import { initiateTraversal } from "./dfsTraversal";
 import { Logger } from '../Logger';
+import { CallGraph } from '../call-graph/generateCallGraph';
 
 // Define the structure for the mapping of function names to feature names.
 interface FeatureMapping {
@@ -58,8 +59,8 @@ async function preProcessFeaturePositions(featurePosFilePath: string): Promise<F
  * @param funcQueueDirPath - Directory path where the function queue files are stored.
  * @returns A promise that resolves to an object mapping file paths to arrays of feature names.
  */
-export async function serializeFeatures(featurePosFilePath: string, CallGraphFilePath: string, resultFilePath: string): Promise<{ [key: string]: string[] }> {
-    const Filetofuncs = await initiateTraversal(CallGraphFilePath);
+export async function serializeFeatures(featurePosFilePath: string, CallGraph: CallGraph, resultFilePath: string): Promise<{ [key: string]: string[] }> {
+    const Filetofuncs = await initiateTraversal(CallGraph);
     const FunctoFeatures = await preProcessFeaturePositions(featurePosFilePath);
     const FiletoFeatures: { [key: string]: string[] } = {};
 
