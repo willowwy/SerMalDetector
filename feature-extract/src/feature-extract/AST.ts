@@ -1,9 +1,8 @@
 /* eslint-disable no-lone-blocks */
 import path from 'path'
-import fs from 'fs'
 import { parse } from '@babel/core'
 import traverse from '@babel/traverse'
-// import { type PackageFeatureInfo } from './PackageFeatureInfo'
+import { Logger } from '../Logger'
 import { isMemberExpression } from '@babel/types'
 import {
   base64_Pattern,
@@ -15,10 +14,8 @@ import {
 } from './Patterns'
 import { getFileLogger } from '../FileLogger'
 import { type PositionRecorder, type Record } from './PositionRecorder'
-import { get } from 'http'
-import { resourceLimits } from 'worker_threads'
 import { CallGraph } from '../call-graph/generateCallGraph'
-
+// import { basedir } from ''
 const MAX_STRING_LENGTH = 66875
 
 
@@ -33,11 +30,11 @@ const MAX_STRING_LENGTH = 66875
  */
 export async function extractFeaturesFromJSFileByAST(
   code: string,
-  // featureSet: PackageFeatureInfo,
   isInstallScript: boolean,
   targetJSFilePath: string,
   positionRecorder: PositionRecorder,
-  CallGraphData: CallGraph
+  CallGraphData: CallGraph,
+  actualPackagePath: string,
 ): Promise<void> {
   function getRecord(path: any, featureName: string, CallGraphData: CallGraph) {
     return {
@@ -49,12 +46,12 @@ export async function extractFeaturesFromJSFileByAST(
   }
 
   function getFuncNum(nodePath: any, jsonData: CallGraph, filePath: string): string | null {
-    const pathAfterPackage = filePath.split('/package/')[1] || 'Path does not contain "/package/".';
-    const fileIndex = jsonData.files.findIndex(PathinGraph => path.normalize(PathinGraph) === path.normalize(pathAfterPackage));
+    const relativePath = path.relative(actualPackagePath, filePath);
+    const fileIndex = jsonData.files.findIndex(PathinGraph => path.normalize(PathinGraph) === path.normalize(relativePath));
 
     if (fileIndex === -1) {
-      // console.error('File not found in JSON data.');
-      return null; // 如果找不到文件，返回null
+      // Logger.error(filePath + 'not found in JSON data.');
+      return null; 
     }
 
     const startLine = nodePath.node.loc.start.line;
@@ -72,7 +69,7 @@ export async function extractFeaturesFromJSFileByAST(
         return funcNum;
       }
     }
-    console.error('Function not found in JSON data.');
+    Logger.error('Function not found in JSON data in'+ filePath);
     return null;
   }
 

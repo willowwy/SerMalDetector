@@ -59,7 +59,7 @@ export async function getPackageJSONInfo (packageJsonPath: string): Promise<Pack
         await promises.access(jsFile)
         executeJSFiles.push(jsFile)
       } catch (error) {
-        Logger.warning(chalk.red(`The file in ${packageJsonPath} doesn't exist.`))
+        Logger.warning(`The file in ${packageJsonPath} doesn't exist.`)
       }
     }
   }
@@ -72,7 +72,7 @@ export async function getPackageJSONInfo (packageJsonPath: string): Promise<Pack
         await promises.access(jsFile)
         executeJSFiles.push(jsFile)
       } catch (error) {
-        Logger.warning(chalk.red(`The file in ${packageJsonPath} doesn't exist.`))
+        Logger.warning(`The file in ${packageJsonPath} doesn't exist.`)
       }
     }
   }
@@ -85,7 +85,7 @@ export async function getPackageJSONInfo (packageJsonPath: string): Promise<Pack
         await promises.access(jsFile)
         executeJSFiles.push(jsFile)
       } catch (error) {
-        Logger.warning(chalk.red(`The file in ${packageJsonPath} doesn't exist.`))
+        Logger.warning(`The file in ${packageJsonPath} doesn't exist.`)
       }
     }
   }
@@ -99,7 +99,7 @@ export async function getPackageJSONInfo (packageJsonPath: string): Promise<Pack
  * @returns the path to the JS file in the script content
  */
 export function extractJSFilePath (scriptContent: string): string | undefined {
-  const jsFileReg = /node\s+?(.+?\.js)/
+  const jsFileReg = /(?:node\s+(?:-e\s+)?["']?)(?:[^"'\s]*?\s*?require\s*\(\s*['"])?([^'"\s]+?\.js)['"]?/
   const matchResult = scriptContent.match(jsFileReg)
   if (matchResult != null) {
     return matchResult[1]

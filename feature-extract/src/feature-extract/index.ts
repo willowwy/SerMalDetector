@@ -6,7 +6,7 @@ import { getPackageFeatureInfo} from './PackageFeatureInfo'
  * @param packagePath the directory of the npm package, where there should be a package.json file
  * @returns the path of the feature file and feature information
  */
-export async function extractFeatureFromPackage(packagePath: string, CallGraph: any) {
-  await getPackageFeatureInfo(packagePath, CallGraph)
+export async function extractFeatureFromPackage(packagePath: string, CallGraph: any,actualPackagePath:string) {
+  await getPackageFeatureInfo(packagePath, CallGraph,actualPackagePath)
   return
 }

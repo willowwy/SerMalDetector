@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import { initiateTraversal } from "./dfsTraversal";
+import { Logger } from '../Logger';
 
 // Define the structure for the mapping of function names to feature names.
 interface FeatureMapping {
@@ -43,7 +44,7 @@ async function preProcessFeaturePositions(featurePosFilePath: string): Promise<F
 
         return functionToFeaturesMap;
     } catch (error) {
-        console.error('Error reading the feature positions file:', error);
+        Logger.error('Error reading the feature positions file:' + error);
         throw error; // Rethrow the error to ensure it's caught by the caller.
     }
 }

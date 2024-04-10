@@ -15,3 +15,4 @@ feature-sequence/.vscode
 feature-sequence/example-queue.json
 
 MalnpmDB_test/
+app.log

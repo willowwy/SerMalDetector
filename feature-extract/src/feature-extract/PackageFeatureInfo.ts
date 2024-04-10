@@ -7,7 +7,6 @@ import { extractFeaturesFromJSFileByAST } from './AST'
 // import { matchUseRegExp } from './RegExp'
 import { PositionRecorder } from './PositionRecorder'
 import { setPositionRecorder } from '../config'
-import { getPackageFromDir } from '../util'
 import { Logger } from '../Logger'
 
 const ALLOWED_MAX_JS_SIZE = 2 * 1024 * 1024
@@ -16,19 +15,19 @@ const ALLOWED_MAX_JS_SIZE = 2 * 1024 * 1024
  * Extract features from the npm package
  * @param packagePath the directory of the npm package, where there should be a package.json file
  */
-export async function getPackageFeatureInfo(packagePath: string, CallGraph: any): Promise<void> {
+export async function getPackageFeatureInfo(packagePath: string, CallGraph: any, actualPackagePath: string): Promise<void> {
   const positionRecorder = new PositionRecorder()
   const result: PackageJSONInfo = {
-  dependencyNumber: 0,
-  devDependencyNumber: 0,
-  includeInstallScript: false,
+    dependencyNumber: 0,
+    devDependencyNumber: 0,
+    includeInstallScript: false,
     installCommand: [],
     executeJSFiles: [],
   }
 
   try {
     // const packageJSONPath = path.join(packagePath, 'package', 'package.json')
-    const actualPackagePath = await getPackageFromDir(packagePath)
+    // actualPackagePath = await getPackageFromDir(packagePath)
     if (actualPackagePath !== '') {
       const packageJSONPath = path.join(actualPackagePath, 'package.json')
       await promises.access(packageJSONPath)
@@ -105,7 +104,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
     }
 
   } catch (error) {
-    Logger.error(`Cannot find package.json in ${packagePath}/package`)
+    Logger.error(`Cannot find package.json in ${actualPackagePath}`)
   }
 
   // analyze JavaScript files in the install script
@@ -126,7 +125,7 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any)
             const jsFileContent = await promises.readFile(targetJSFilePath, { encoding: 'utf-8' })
             const fileInfo = await promises.stat(targetJSFilePath)
             if (fileInfo.size <= ALLOWED_MAX_JS_SIZE) {
-              await extractFeaturesFromJSFileByAST(jsFileContent, isInstallScriptFile, targetJSFilePath, positionRecorder, CallGraph)
+              await extractFeaturesFromJSFileByAST(jsFileContent, isInstallScriptFile, targetJSFilePath, positionRecorder, CallGraph, actualPackagePath)
               // matchUseRegExp(jsFileContent, result, positionRecorder, targetJSFilePath)
             }
             resolve(true)

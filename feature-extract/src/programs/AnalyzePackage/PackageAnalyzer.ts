@@ -4,7 +4,7 @@ import { Worker, parentPort, workerData } from 'worker_threads'
 import { extractFeatureFromPackage } from '../../feature-extract'
 import { generateCallGraphForPackage } from '../../call-graph/generateCallGraph'
 import { serializeFeatures } from '../../feature-serialize/SerializeFeatures'
-import { getErrorInfo } from '../../util'
+import { getErrorInfo, getPackageFromDir } from '../../util'
 import { getConfig } from '../../config'
 import { Logger } from '../../Logger'
 import { readdirSync } from 'fs'
@@ -18,13 +18,14 @@ import { readdirSync } from 'fs'
  */
 export async function analyzeSinglePackage(packagePath: string, featurePosDirPath: string, CallGraphDirPath: string, SequentialFeatureDirPath: string) {
   const packageName = path.basename(packagePath)
-
+  const actualPackagePath = await getPackageFromDir(packagePath)
   //generate call graph
   const CallGraphFilePath = path.join(CallGraphDirPath, `${packageName}_cg.json`)
   let CallGraph;
   try {
-    CallGraph = await generateCallGraphForPackage(packagePath, CallGraphFilePath)
-    Logger.info(`Finished generating call graphs of ${packageName}, recorded at ${CallGraphFilePath}`)
+    CallGraph = await generateCallGraphForPackage(actualPackagePath, CallGraphFilePath)
+    if (CallGraph) { Logger.info(`Finished generating call graphs of ${packageName}, recorded at ${CallGraphFilePath}`) }
+    else { Logger.warning("The call graph file is empty."); return null }
   } catch (error) {
     Logger.error(getErrorInfo(error))
     return null
@@ -33,7 +34,7 @@ export async function analyzeSinglePackage(packagePath: string, featurePosDirPat
   //extract feature
   const featurePosPath = path.join(featurePosDirPath, `${packageName}_fp.json`)
   try {
-    await extractFeatureFromPackage(packagePath, CallGraph)
+    await extractFeatureFromPackage(packagePath, CallGraph, actualPackagePath)
     Logger.info(`Finished extracting features of ${packageName}, recorded at ${featurePosPath}`)
     await promises.writeFile(featurePosPath, getConfig().positionRecorder!.serializeRecord())
   } catch (error) {
@@ -42,7 +43,6 @@ export async function analyzeSinglePackage(packagePath: string, featurePosDirPat
   }
 
   //serialize features
-  // const queueFilePath = path.join(featureQueueDirPath, `${packageName}_queue.json`)
   const resultFilePath = path.join(SequentialFeatureDirPath, `${packageName}_rst.json`)
   try {
     await serializeFeatures(featurePosPath, CallGraphFilePath, resultFilePath)
