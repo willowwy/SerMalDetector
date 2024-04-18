@@ -36,7 +36,7 @@ def run_npm_start():
 
 if __name__ == '__main__':
     # 指定数据集目录路径
-    dataset_dir_path = 'data/datasets'
+    dataset_dir_path = '/home/wwy/Datasets/MalnpmDB_origin/MalnpmDB/mal'
     # 解压操作
     decompress_packages(dataset_dir_path)
     # 执行npm start

@@ -50,7 +50,7 @@ export async function extractFeaturesFromJSFileByAST(
     const fileIndex = jsonData.files.findIndex(PathinGraph => path.normalize(PathinGraph) === path.normalize(relativePath));
 
     if (fileIndex === -1) {
-      Logger.error(filePath + 'not found in CallGraph JSON data.');
+      // Logger.error(filePath + 'not found in CallGraph JSON data.');
       return null;
     }
 
@@ -71,7 +71,7 @@ export async function extractFeaturesFromJSFileByAST(
         return funcNum;
       }
     }
-    Logger.error('Function not found in CallGraph JSON data in' + filePath);
+    // Logger.error('Function not found in CallGraph JSON data in' + filePath);
     return null;
   }
 
@@ -149,10 +149,8 @@ export async function extractFeaturesFromJSFileByAST(
               moduleName === 'got' ||
               moduleName === 'dns'
             ) {
-              // featureSet.useNetwork = true
               positionRecorder.addRecord(getRecord(path, 'useNetwork', CallGraphData))
               if (isInstallScript) {
-                // featureSet.useNetworkInScript = true
                 positionRecorder.addRecord(getRecord(path, 'useNetworkInScript', CallGraphData))
               }
             }
@@ -161,7 +159,6 @@ export async function extractFeaturesFromJSFileByAST(
             // @ts-expect-error uselesss lint error
             const moduleName = path.node.arguments[0].value as string
             if (moduleName === 'crypto' || moduleName === 'zlib') {
-              // featureSet.useEncryptAndEncode = true
               positionRecorder.addRecord(getRecord(path, 'useEncryptAndEncode', CallGraphData))
             }
           }
@@ -171,17 +168,14 @@ export async function extractFeaturesFromJSFileByAST(
           // @ts-expect-error uselesss lint error
           path.node.callee.object.name === 'os'
         ) {
-          // featureSet.useOperatingSystem = true
           positionRecorder.addRecord(getRecord(path, 'useOperatingSystem', CallGraphData))
         }
       },
       StringLiteral: function (path) {
         const content = path.node.value
         if (content === 'base64') {
-          // featureSet.useBase64Conversion = true
           positionRecorder.addRecord(getRecord(path, 'useBase64Conversion', CallGraphData))
           if (isInstallScript) {
-            // featureSet.useBase64ConversionInScript = true
             positionRecorder.addRecord(getRecord(path, 'useBase64ConversionInScript', CallGraphData))
           }
         }
