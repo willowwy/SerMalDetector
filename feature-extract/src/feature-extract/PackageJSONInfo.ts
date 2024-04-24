@@ -59,7 +59,7 @@ export async function getPackageJSONInfo (packageJsonPath: string): Promise<Pack
         await promises.access(jsFile)
         executeJSFiles.push(jsFile)
       } catch (error) {
-        Logger.warning(`The file in ${packageJsonPath} doesn't exist.`)
+        Logger.warn(`The file in ${packageJsonPath} doesn't exist.`)
       }
     }
   }
@@ -72,7 +72,7 @@ export async function getPackageJSONInfo (packageJsonPath: string): Promise<Pack
         await promises.access(jsFile)
         executeJSFiles.push(jsFile)
       } catch (error) {
-        Logger.warning(`The file in ${packageJsonPath} doesn't exist.`)
+        Logger.warn(`The file in ${packageJsonPath} doesn't exist.`)
       }
     }
   }
@@ -85,7 +85,7 @@ export async function getPackageJSONInfo (packageJsonPath: string): Promise<Pack
         await promises.access(jsFile)
         executeJSFiles.push(jsFile)
       } catch (error) {
-        Logger.warning(`The file in ${packageJsonPath} doesn't exist.`)
+        Logger.warn(`The file in ${packageJsonPath} doesn't exist.`)
       }
     }
   }

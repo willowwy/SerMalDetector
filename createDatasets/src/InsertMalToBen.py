@@ -1,91 +1,189 @@
 import random
 import os
+import shutil
+import logging
 
+# Configure the logging module
+logging.basicConfig(
+    level=logging.ERROR,  # 设置日志级别为ERROR，这意味着只有ERROR及以上级别的日志会被记录
+    format='%(asctime)s - %(levelname)s - %(message)s',  # 设置日志格式
+    filename='error.log',  # 指定日志文件名
+    filemode='a'  # 设置文件模式为'a'，表示追加模式
+)
+
+# from collections import defaultdict
 def read_file(file_path):
     """Reads the content of a file."""
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         return file.read()
+
 
 def write_file(file_path, content):
     """Writes content to a file."""
-    with open(file_path, 'w', encoding='utf-8') as file:
+    with open(file_path, "w", encoding="utf-8") as file:
         file.write(content)
 
+
+def get_all_js_files_in_subfolder(subfolder):
+    """Gets all JavaScript files in the given subfolder."""
+    js_files = []
+    for root, dirs, files in os.walk(subfolder):
+        js_files.extend(
+            [os.path.join(root, file) for file in files if file.endswith(".js")]
+        )
+    return js_files
+
+
 def get_possible_insert_points(file_content):
-    """Determines possible insert points based on patterns in the file content."""
+    """Determines safer possible insert points avoiding mid-structure interruptions."""
     possible_insert_points = []
-    in_class = False
-    in_async_function = False
-    in_control_structure = False
+    lines = file_content.split("\n")
+    in_function = False
 
-    for i, line in enumerate(file_content.split('\n')):
+    for i, line in enumerate(lines):
         stripped_line = line.strip()
-        
-        if stripped_line.startswith('class '):
-            in_class = True
-        if in_class and stripped_line.endswith('}'):
-            in_class = False
-            possible_insert_points.append(i + 1)
-        
-        if 'async function' in stripped_line:
-            in_async_function = True
-        if in_async_function and stripped_line.endswith('}'):
-            in_async_function = False
-            possible_insert_points.append(i + 1)
-        
-        if '.addEventListener(' in stripped_line and stripped_line.endswith(');'):
-            possible_insert_points.append(i + 1)
+        if (
+            any(
+                stripped_line.startswith(x)
+                for x in ["function ", "const ", "let ", "var "]
+            )
+            and "{" in stripped_line
+        ):
+            in_function = True
+        if in_function and stripped_line.endswith("}"):
+            in_function = False
+            possible_insert_points.append(i + 1)  # End of function or control structure
+            if (
+                len(possible_insert_points) >= MAX_POINTS
+            ):  # Assuming MAX_POINTS is defined elsewhere
+                return possible_insert_points
 
-        if stripped_line.startswith('import '):
-            possible_insert_points.append(i + 1)
-        
-        if any(x in stripped_line for x in ['if ', 'switch ', 'for ', 'while ']):
-            in_control_structure = True
-        if in_control_structure and stripped_line.endswith('}'):
-            in_control_structure = False
-            possible_insert_points.append(i + 1)
-    
-    possible_insert_points.append(len(file_content.split('\n')))
+    # Always add the end of the file as a safe insert point if the file isn't empty
+    if lines:  # Check if there are any lines at all
+        possible_insert_points.append(len(lines))
+
     return possible_insert_points
 
-def insert_code_at_random_global_position(code_a, file_b_path):
-    """
-    Inserts code from code_a into file_b at a random global position.
 
-    Args:
-        code_a (str): Code to be inserted.
-        file_b_path (str): Path to the file where the code will be inserted.
-    """
-    file_b_content = read_file(file_b_path)
-    insert_points = get_possible_insert_points(file_b_content)
-    
-    if insert_points:
-        insert_point = random.choice(insert_points)
-        new_content = '\n'.join(file_b_content.split('\n')[:insert_point] + [''] + [code_a] + [''] + file_b_content.split('\n')[insert_point:])
-    else:
-        new_content = file_b_content + '\n' + code_a + '\n'
-    
-    write_file(file_b_path, new_content)
+def extract_imports_and_rest(code):
+    """Extracts import and require statements and the rest of the code."""
+    imports, rest = [], []
+    lines = code.split("\n")
+    for line in lines:
+        if line.strip().startswith(("import ", "require(")):
+            imports.append(line)
+        else:
+            rest.append(line)
+    return "\n".join(imports), "\n".join(rest)
+
+
+def insert_code_at_random_global_position(file_a, file_b):
+    code_a = read_file(file_a)
+    file_content = read_file(file_b)
+
+    imports_code, rest_code = extract_imports_and_rest(code_a)
+    insert_points = get_possible_insert_points(file_content)
+    insert_point = random.choice(insert_points)
+
+    # Prepend imports at the top, and insert the rest at a random position
+    file_content = (
+        "\n".join([imports_code, file_content]) if imports_code else file_content
+    )
+    new_content = "\n".join(
+        file_content.split("\n")[:insert_point]
+        + [rest_code]
+        + file_content.split("\n")[insert_point:]
+    )
+
+    write_file(file_b, new_content)
+    print(f"Code from {file_a} inserted into {file_b} at position {insert_point}.")
+
+
+def insert_a_to_b(files_a, current_subfolder_b):
+    """Inserts code from files_a into files_b."""
+    # mkdir result folder
+    b_base_name = os.path.basename(current_subfolder_b)
+    files_a_names = "_".join(os.path.basename(file_a) for file_a in files_a)
+    result_folder_name = b_base_name + "_" + files_a_names
+    result_path = os.path.join(RESULT_PATH, result_folder_name)
+    os.makedirs(result_path, exist_ok=True)
+
+    # Copy all files from subfolder B to the result folder
+    for item in os.listdir(current_subfolder_b):
+        s = os.path.join(current_subfolder_b, item)
+        d = os.path.join(result_path, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, dirs_exist_ok=True)
+        else:
+            shutil.copy2(s, d)
+
+    for file_a in files_a:
+        files_b = get_all_js_files_in_subfolder(result_path)
+        try:
+            if not files_b:
+                raise ValueError(f"No JavaScript files found in {current_subfolder_b}.")
+        except ValueError as e:
+            logging.error(e)
+            return False  # Indicate an error occurred        
+        
+        target_file_b = random.choice(files_b)
+        insert_code_at_random_global_position(file_a, target_file_b)
+    print(f"Processed subfolders in {RESULT_MULTIPLIER} result folders.")
+
 
 def process_folders(folder_a_path, folder_b_path):
-    """
-    Inserts code files from folder_a into corresponding code files in folder_b.
-
-    Args:
-        folder_a_path (str): Path to the folder containing code files to be inserted.
-        folder_b_path (str): Path to the folder where code files will be inserted.
-    """
-    files_a = sorted(os.listdir(folder_a_path))
-    files_b = sorted(os.listdir(folder_b_path))
+    """Processes the given folders."""
+    # Get all JavaScript files from folder A
+    files_a = [file for file in os.listdir(folder_a_path) if file.endswith(".js")]
+    try:
+        if not files_a:
+            raise ValueError(f"No subfolders found in folder shortMalSrc.")
+    except ValueError as e:
+        logging.error(e)
+        return False  # Indicate an error occurred   
     
-    if len(files_a) != len(files_b):
-        raise ValueError("Unequal number of files in folders A and B")
-    
-    for file_a, file_b in zip(files_a, files_b):
-        file_a_path = os.path.join(folder_a_path, file_a)
-        file_b_path = os.path.join(folder_b_path, file_b)
-        
-        insert_code_at_random_global_position(read_file(file_a_path), file_b_path)
-        print(f"Inserted content from {file_a} into {file_b}")
+    # Get all first-level subfolders in folder B
+    subfolders_b = [
+        os.path.join(folder_b_path, folder)
+        for folder in os.listdir(folder_b_path)
+        if os.path.isdir(os.path.join(folder_b_path, folder))
+    ]
+    try:
+        if not subfolders_b:
+            raise ValueError(f"No subfolders found in folder LongBenPac.")
+    except ValueError as e:
+        logging.error(e)
+        return False  # Indicate an error occurred 
 
-process_folders('Testing/shortMal', 'Testing/longBen')
+    # Process the subfolders
+    files_a_iterator = iter(files_a)
+    for current_subfolder_b in subfolders_b:
+        for _ in range(RESULT_MULTIPLIER):
+            current_files_a = []
+            for _ in range(NUM_INSERTIONS):
+                try:
+                    file_a = next(files_a_iterator)
+                    file_a_path = os.path.join(folder_a_path, file_a)
+                    current_files_a.append(file_a_path)
+                except StopIteration:
+                    # If all files have been iterated through, reset the iterator
+                    files_a_iterator = iter(files_a)
+                    file_a = next(files_a_iterator)
+                    file_a_path = os.path.join(folder_a_path, file_a)
+                    current_files_a.append(file_a_path)
+                # Process the current subfolder
+            insert_a_to_b(current_files_a, current_subfolder_b)
+
+
+# The number of insertions to perform for each subfolder in LongBenPac
+NUM_INSERTIONS = 1
+# The number of result folders to create for each subfolder in LongBenPac
+RESULT_MULTIPLIER = 3
+# The maximum number of possible insert points to consider in each file
+MAX_POINTS = 50
+# The path to the directory where the results will be stored
+RESULT_PATH = "/home/wwy/SerMalDetector/createDatasets/MalinBenPac/z_result"
+process_folders(
+    "/home/wwy/SerMalDetector/createDatasets/MalinBenPac/shortMalSrc",
+    "/home/wwy/SerMalDetector/createDatasets/MalinBenPac/longBenSrc",
+)

@@ -58,9 +58,6 @@ export async function extractFeaturesFromJSFileByAST(
     const startColumn = nodePath.node.loc.start.column + 1;
     const endLine = nodePath.node.loc.end.line;
     const endColumn = nodePath.node.loc.end.column + 1;
-    if (endColumn === 55) {
-      console.log("yeah!")
-    }
 
     for (const [funcNum, loc] of Object.entries(jsonData.functions)) {
       const [fIndex, sLine, sColumn, eLine, eColumn] = loc.split(':').map(Number);

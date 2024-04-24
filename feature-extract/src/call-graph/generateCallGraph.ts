@@ -43,10 +43,10 @@ export async function generateCallGraphForPackage(packagePath: string, callGraph
     try {
         const files = await readdirAsync(packagePath);
         if (files.length === 0) {
-            Logger.warning(`The package directory at ${packagePath} is empty. The process will stop.`);
+            Logger.warn(`The package directory at ${packagePath} is empty. The process will stop.`);
             process.exit();
         } else if (!files.includes('package.json')) {
-            Logger.warning(`No package.json found in the package directory at ${packagePath}. This package may not conform to standards. The process will stop.`);
+            Logger.warn(`No package.json found in the package directory at ${packagePath}. This package may not conform to standards. The process will stop.`);
             process.exit();
         }
     } catch (error) {
@@ -54,7 +54,7 @@ export async function generateCallGraphForPackage(packagePath: string, callGraph
         throw error; // Re-throw the error after logging it
     }
     
-    const command = `node --max-old-space-size=8192 $(which npx) jelly -j ${callGraphFilePath} ${packagePath} --ignore-unresolved --no-callgraph-implicit --no-callgraph-native --no-callgraph-external`;
+    const command = `node --max-old-space-size=8192 $(which npx) jelly -j ${callGraphFilePath} ${packagePath} --ignore-dependencies --ignore-unresolved --no-callgraph-implicit --no-callgraph-native --no-callgraph-external`;
 
     try {
         await execAsync(command);

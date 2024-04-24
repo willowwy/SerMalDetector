@@ -24,7 +24,7 @@ export async function analyzeSinglePackage(
   const packageName = path.basename(packagePath)
   const actualPackagePath = await getPackageFromDir(packagePath)
   if (!actualPackagePath) {
-    Logger.warning("Package "+ packageName + " is empty or without package.json");
+    Logger.warn("Package "+ packageName + " is empty or without package.json");
     return null;
   }
 
@@ -33,7 +33,7 @@ export async function analyzeSinglePackage(
   let CallGraph;
   try {
     CallGraph = await generateCallGraphForPackage(actualPackagePath, CallGraphFilePath)
-    if (CallGraph) { Logger.info(`Finished generating call graphs of ${packageName}, recorded at ${CallGraphFilePath}`) }
+    // if (CallGraph) { Logger.info(`Finished generating call graphs of ${packageName}, recorded at ${CallGraphFilePath}`) }
   } catch (error) {
     Logger.error(getErrorInfo(error))
     return null
@@ -43,7 +43,7 @@ export async function analyzeSinglePackage(
   const featurePosPath = path.join(featurePosDirPath, `${packageName}_fp.json`)
   try {
     await extractFeatureFromPackage(packagePath, CallGraph, actualPackagePath)
-    Logger.info(`Finished extracting features of ${packageName}, recorded at ${featurePosPath}`)
+    // Logger.info(`Finished extracting features of ${packageName}, recorded at ${featurePosPath}`)
     await promises.writeFile(featurePosPath, getConfig().positionRecorder!.serializeRecord())
   } catch (error) {
     Logger.error(getErrorInfo(error))
@@ -54,7 +54,7 @@ export async function analyzeSinglePackage(
   const resultFilePath = path.join(SequentialFeatureDirPath, `${packageName}_rst.json`)
   try {
     await serializeFeatures(featurePosPath, CallGraph, resultFilePath)
-    Logger.info(`Finished serializing features of ${packageName}, recorded at ${resultFilePath}`)
+    Logger.info(`${packageName} finished, recorded at ${resultFilePath}`)
   } catch (error) {
     Logger.error(getErrorInfo(error))
     return null
@@ -102,7 +102,7 @@ export async function analyzePackagesMaster(packagesPath: string[], featurePosDi
   }
   for (const worker of workers) {
     worker.on('exit', (exitCode: number) => {
-      // Logger.info(`Worker stopped with exit code ${exitCode}`)
+      Logger.info(`Worker stopped with exit code ${exitCode}`)
     })
   }
 }
@@ -113,7 +113,7 @@ export async function analyzePackagesWorker() {
   for (const packagePath of packagesPath) {
     await analyzeSinglePackage(packagePath, featurePosDirPath, CallGraphDirPath, SequentialFeatureDirPath)
   }
-  // Logger.info(`Worker ${workerId} finished`)
+  Logger.info(`Worker ${workerId} finished`)
   if (parentPort) {
     parentPort.postMessage(`Worker ${workerId} finished`)
   }

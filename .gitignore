@@ -9,12 +9,7 @@ feature-extract/node_modules/
 feature-extract/out
 feature-extract/dist/
 
-feature-sequence/node_modules/
-feature-sequence/data
-feature-sequence/.vscode
-feature-sequence/example-queue.json
 
-MalnpmDB_test/
+MalnpmDB/
 app.log
 createDatasets/MalinBenPac
-MalnpmDB/

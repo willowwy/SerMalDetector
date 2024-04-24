@@ -12,8 +12,8 @@ data_dir = '/home/wwy/SerMalDetector/MalnpmDB/MalnpmDB/ben'
 output_dir = '/home/wwy/SerMalDetector/createDatasets/MalinBenPac/longBenSrc'
 
 # constraints of packages' size
-MIN_SIEZ_KB = 100
-MAX_SIZE_KB = 101
+MIN_SIEZ_KB = 717
+MAX_SIZE_KB = None
 
 # Create new directory (if not exsit)
 ensure_directory_exists(data_dir)

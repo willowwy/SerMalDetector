@@ -25,7 +25,7 @@ async function main() {
 
   const option = '-d'
   
-  const packageOrDirPath = '/home/wwy/SerMalDetector/data/.decompressed-packages'
+  const packageOrDirPath = '/home/wwy/SerMalDetector/createDatasets/MalinBenPac/z_result'
   const featurePosDirPath = '/home/wwy/SerMalDetector/data/feature-positions'
   const CallGraphDirPath = '/home/wwy/SerMalDetector/data/call-graphs'
   const SequentialFeatureDirPath = '/home/wwy/SerMalDetector/data/result'
