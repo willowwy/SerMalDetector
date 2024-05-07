@@ -3,7 +3,7 @@ import tarfile
 
 def decompress_packages(dataset_dir_path: str):
     # 定义目标解压路径
-    decompressed_path = os.path.abspath('data/.decompressed-packages')
+    decompressed_path = os.path.abspath('data/.cache')
     # 确保目标解压路径存在
     os.makedirs(decompressed_path, exist_ok=True)
 
@@ -36,7 +36,7 @@ def run_npm_start():
 
 if __name__ == '__main__':
     # 指定数据集目录路径
-    dataset_dir_path = '/home/wwy/Datasets/MalnpmDB_origin/MalnpmDB/mal'
+    dataset_dir_path = '/home/wwy/SerMalDetector/MalnpmDB/MalnpmDB/ben'
     # 解压操作
     decompress_packages(dataset_dir_path)
     # 执行npm start

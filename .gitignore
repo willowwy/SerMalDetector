@@ -3,7 +3,7 @@
 .vscode/
 .venv/
 .env/
-data/
+
 feature-extract/.vscode
 feature-extract/node_modules/
 feature-extract/out
@@ -11,5 +11,6 @@ feature-extract/dist/
 
 
 MalnpmDB/
-app.log
-createDatasets/MalinBenPac
+*.log
+data/
+datasets/

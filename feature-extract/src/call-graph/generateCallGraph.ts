@@ -4,31 +4,31 @@ import fs from 'fs';
 import { Logger } from '../Logger';
 
 const execAsync = promisify(exec);
-const readFileAsync = promisify(fs.readFile);
+// const readFileAsync = promisify(fs.readFile);
 const readdirAsync = fs.promises.readdir;
 
-export interface CallGraph {
-    entries: string[];
-    files: string[];
-    functions: { [key: string]: string };
-    fun2fun: [number, number][];
-}
+// export interface CallGraph {
+//     entries: string[];
+//     files: string[];
+//     functions: { [key: string]: string };
+//     fun2fun: [number, number][];
+// }
 
-/**
- * Asynchronously reads and parses a JSON file into a CallGraph object.
- * 
- * @param jsonFilePath The path to the JSON file.
- * @returns A promise that resolves to a CallGraph object.
- */
-async function readJsonData(jsonFilePath: string): Promise<CallGraph> {
-    try {
-        const data = await readFileAsync(jsonFilePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        Logger.error(`Error reading or parsing JSON file: ${error.message}`);
-        throw error; // Re-throw the error after logging it
-    }
-}
+// /**
+//  * Asynchronously reads and parses a JSON file into a CallGraph object.
+//  * 
+//  * @param jsonFilePath The path to the JSON file.
+//  * @returns A promise that resolves to a CallGraph object.
+//  */
+// async function readJsonData(jsonFilePath: string): Promise<CallGraph> {
+//     try {
+//         const data = await readFileAsync(jsonFilePath, 'utf8');
+//         return JSON.parse(data);
+//     } catch (error) {
+//         Logger.error(`Error reading or parsing JSON file: ${error.message}`);
+//         throw error; // Re-throw the error after logging it
+//     }
+// }
 
 /**
  * Generates a call graph for a specified package directory and saves it to a file.
@@ -38,7 +38,7 @@ async function readJsonData(jsonFilePath: string): Promise<CallGraph> {
  * @param callGraphFilePath The file path where the call graph should be saved.
  * @returns A promise that resolves to the call graph data read from the generated file.
  */
-export async function generateCallGraphForPackage(packagePath: string, callGraphFilePath: string): Promise<CallGraph> {
+export async function generateCallGraphForPackage(packagePath: string, callGraphFilePath: string) {
     // Check if the package directory is empty or missing package.json
     try {
         const files = await readdirAsync(packagePath);
@@ -54,7 +54,7 @@ export async function generateCallGraphForPackage(packagePath: string, callGraph
         throw error; // Re-throw the error after logging it
     }
     
-    const command = `node --max-old-space-size=8192 $(which npx) jelly -j ${callGraphFilePath} ${packagePath} --ignore-dependencies --ignore-unresolved --no-callgraph-implicit --no-callgraph-native --no-callgraph-external`;
+    const command = `node --max-old-space-size=14336 $(which npx) jelly -j ${callGraphFilePath} ${packagePath} --ignore-dependencies --ignore-unresolved --no-callgraph-implicit --no-callgraph-native --no-callgraph-external`;
 
     try {
         await execAsync(command);
@@ -63,5 +63,5 @@ export async function generateCallGraphForPackage(packagePath: string, callGraph
         throw error; // Re-throw the error after logging it
     }
 
-    return await readJsonData(callGraphFilePath);
+    return;
 }

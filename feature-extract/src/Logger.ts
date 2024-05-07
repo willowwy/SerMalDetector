@@ -1,9 +1,8 @@
 import winston from 'winston';
-// import * as fs from 'fs';
 import path from 'path';
 
 // Define the log file path
-const logFilePath = '/home/wwy/SerMalDetector/app.log'
+const logFilePath = '/home/wwy/SerMalDetector/log/app.log'
 //path.join(__dirname, '/home/wwy/SerMalDetector/app.log');
 
 // Create a custom format that strips ANSI codes for file logging

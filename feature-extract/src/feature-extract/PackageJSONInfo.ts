@@ -1,4 +1,3 @@
-import chalk from 'chalk'
 import promises from 'fs/promises'
 import path from 'path'
 import { isUTF8WithBOM, readFileFromUTF8WithBOM } from '../util/FileUtil'

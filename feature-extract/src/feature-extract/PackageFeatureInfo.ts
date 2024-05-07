@@ -4,7 +4,6 @@ import { getPackageJSONInfo, type PackageJSONInfo } from './PackageJSONInfo'
 import { getDomainPattern, IP_Pattern, Network_Command_Pattern, SensitiveStringPattern, getDomainsType } from './Patterns'
 import { getAllJSFilesInInstallScript } from './GetInstallScripts'
 import { extractFeaturesFromJSFileByAST } from './AST'
-// import { matchUseRegExp } from './RegExp'
 import { PositionRecorder } from './PositionRecorder'
 import { setPositionRecorder } from '../config'
 import { Logger } from '../Logger'
@@ -15,7 +14,7 @@ const ALLOWED_MAX_JS_SIZE = 2 * 1024 * 1024
  * Extract features from the npm package
  * @param packagePath the directory of the npm package, where there should be a package.json file
  */
-export async function getPackageFeatureInfo(packagePath: string, CallGraph: any, actualPackagePath: string): Promise<void> {
+export async function getPackageFeatureInfo(packagePath: string, CallGraphFiles: string[], CallGraphFunctions: { [key: string]: string }, actualPackagePath: string): Promise<void> {
   const positionRecorder = new PositionRecorder()
   const result: PackageJSONInfo = {
     dependencyNumber: 0,
@@ -26,8 +25,6 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any,
   }
 
   try {
-    // const packageJSONPath = path.join(packagePath, 'package', 'package.json')
-    // actualPackagePath = await getPackageFromDir(packagePath)
     if (actualPackagePath !== '') {
       const packageJSONPath = path.join(actualPackagePath, 'package.json')
       await promises.access(packageJSONPath)
@@ -110,33 +107,23 @@ export async function getPackageFeatureInfo(packagePath: string, CallGraph: any,
   // analyze JavaScript files in the install script
   await getAllJSFilesInInstallScript(result.executeJSFiles)
 
-  async function traverseDir(dirPath: string) {
-    if (path.basename(dirPath) === 'node_modules') {
-      return
-    }
-    const dir = await promises.opendir(dirPath)
-    for await (const dirent of dir) {
-      const jsFilePath = path.join(dirPath, dirent.name)
-      const isInstallScriptFile = result.executeJSFiles.findIndex(filePath => filePath === jsFilePath) >= 0
-      if (dirent.isFile() && (dirent.name.endsWith('.js') || isInstallScriptFile)) {
-        await new Promise((resolve) => {
-          setTimeout(async () => {
-            const targetJSFilePath = path.join(dirPath, dirent.name)
-            const jsFileContent = await promises.readFile(targetJSFilePath, { encoding: 'utf-8' })
-            const fileInfo = await promises.stat(targetJSFilePath)
-            if (fileInfo.size <= ALLOWED_MAX_JS_SIZE) {
-              await extractFeaturesFromJSFileByAST(jsFileContent, isInstallScriptFile, targetJSFilePath, positionRecorder, CallGraph, actualPackagePath)
-              // matchUseRegExp(jsFileContent, result, positionRecorder, targetJSFilePath)
-            }
-            resolve(true)
-          }, 0)
-        })
-      } else if (dirent.isDirectory()) {
-        await traverseDir(path.join(dirPath, dirent.name))
-      }
+  async function traverseDir(baseDirPath: string, callGraphFiles: string[]) {
+    for (const file of callGraphFiles) {
+      const targetJSFilePath = path.join(baseDirPath, file);
+      const isInstallScriptFile = result.executeJSFiles.findIndex(filePath => filePath === targetJSFilePath) >= 0
+      await new Promise((resolve) => {
+        setTimeout(async () => {
+          const jsFileContent = await promises.readFile(targetJSFilePath, { encoding: 'utf-8' })
+          const fileInfo = await promises.stat(targetJSFilePath)
+          if (fileInfo.size <= ALLOWED_MAX_JS_SIZE) {
+            await extractFeaturesFromJSFileByAST(jsFileContent, isInstallScriptFile, targetJSFilePath, positionRecorder, CallGraphFiles, CallGraphFunctions, actualPackagePath)
+          }
+          resolve(true)
+        }, 0)
+      })
     }
   }
-  await traverseDir(packagePath)
+  await traverseDir(actualPackagePath, CallGraphFiles)
   setPositionRecorder(positionRecorder)
   return
 }

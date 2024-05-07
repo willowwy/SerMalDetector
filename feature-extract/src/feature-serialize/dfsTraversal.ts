@@ -1,5 +1,4 @@
 import * as fs from 'fs/promises';
-import {CallGraph} from '../call-graph/generateCallGraph';
 import { dfsDepthLimit } from '../index';
 
 export interface CallQueueMap {
@@ -18,7 +17,7 @@ export interface CallQueueMap {
  * @param fileName The name of the file being processed.
  */
 //……
-function dfsTraversal(nodeIndex: number, graphData: CallGraph, callQueueMap: CallQueueMap, currentPath: number[], fileName: string): void {
+function dfsTraversal(nodeIndex: number, CallGraphFun2Fun: [number, number][], callQueueMap: CallQueueMap, currentPath: number[], fileName: string): void {
   // Halt recursion if the depth reaches global limit or detects a cycle (depth of 3 for cycles)
   if (currentPath.length > dfsDepthLimit || (currentPath.includes(nodeIndex) && currentPath.length - currentPath.indexOf(nodeIndex) > 3)) {
     return;
@@ -29,9 +28,9 @@ function dfsTraversal(nodeIndex: number, graphData: CallGraph, callQueueMap: Cal
   callQueueMap[fileName].push(nodeIndex.toString());
 
   // Iterate over function relationships
-  graphData.fun2fun.forEach(([caller, callee]) => {
+  CallGraphFun2Fun.forEach(([caller, callee]) => {
     if (caller === nodeIndex) {
-      dfsTraversal(callee, graphData, callQueueMap, [...currentPath], fileName);
+      dfsTraversal(callee, CallGraphFun2Fun, callQueueMap, [...currentPath], fileName);
     }
   });
 
@@ -47,16 +46,46 @@ function dfsTraversal(nodeIndex: number, graphData: CallGraph, callQueueMap: Cal
  * @param graphFilePath Path to the graph data file.
  * @param outputPath Path where the output file will be written.
  */
-export async function initiateTraversal(graphData: any): Promise<CallQueueMap> {
+export async function initiateTraversal(graphDataFilePath: string): Promise<CallQueueMap> {
   const callQueueMap: CallQueueMap = {};
+  // Read the call graph data from the specified file
+  let CallGraphEntries: string[] = []
+  let CallGraphFiles: string[] = []
+  let CallGraphFunctions: { [key: string]: string } = {}
+  let CallGraphFun2Fun: [number, number][] = []
 
+
+  async function readTargetData(filePath) {
+    try {
+      const data = await fs.readFile(filePath, 'utf8');
+      const json = JSON.parse(data);
+
+      if (json.files) {
+        CallGraphFiles = json.files;
+      }
+      if (json.functions) {
+        CallGraphFunctions = json.functions;
+      }
+      if (json.fun2fun) {
+        CallGraphFun2Fun = json.fun2fun;
+      }
+      if (json.entries) {
+        CallGraphEntries = json.entries;
+      }
+      return
+    } catch (error) {
+      console.error('Error while reading the JSON file:', error);
+    }
+  }
+
+  await readTargetData(graphDataFilePath)
   // Start DFS traversal from each entry point
-  graphData.entries.forEach(entry => {
-    const startNodeIndex = graphData.files.indexOf(entry);
+  CallGraphEntries.forEach(entry => {
+    const startNodeIndex = CallGraphFiles.indexOf(entry);
     if (startNodeIndex !== -1) {
-      Object.keys(graphData.functions).forEach(func => {
-        if (graphData.functions[func].startsWith(startNodeIndex.toString())) {
-          dfsTraversal(parseInt(func), graphData, callQueueMap, [], entry);
+      Object.keys(CallGraphFunctions).reverse().forEach(func => {
+        if (CallGraphFunctions[func].startsWith(startNodeIndex.toString())) {
+          dfsTraversal(parseInt(func), CallGraphFun2Fun, callQueueMap, [], entry);
         }
       });
     }
