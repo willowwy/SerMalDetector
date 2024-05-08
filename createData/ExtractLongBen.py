@@ -7,13 +7,13 @@ def ensure_directory_exists(directory):
     
     
 # Path to the directory containing the malicious compressed packages
-data_dir = '/home/wwy/SerMalDetector/MalnpmDB/MalnpmDB/ben'
+data_dir = '/home/wwy/MalnpmDB/MalnpmDB/ben'
 # Path to the directory containing short malicious scource files
-output_dir = '/home/wwy/SerMalDetector/createDatasets/MalinBenPac/longBenSrc'
+output_dir = '/home/wwy/SerMalDetector/datasets/longBenSrc'
 
 # constraints of packages' size
-MIN_SIEZ_KB = 717
-MAX_SIZE_KB = None
+MIN_SIEZ_KB = 238
+MAX_SIZE_KB = 751
 
 # Create new directory (if not exsit)
 ensure_directory_exists(data_dir)

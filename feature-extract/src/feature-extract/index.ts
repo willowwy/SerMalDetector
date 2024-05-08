@@ -6,7 +6,7 @@ import { getPackageFeatureInfo } from './PackageFeatureInfo'
  * @param packagePath the directory of the npm package, where there should be a package.json file
  * @returns the path of the feature file and feature information
  */
-export async function extractFeatureFromPackage(packagePath: string, CallGraphFilePath: string, actualPackagePath: string) {
+export async function extractFeatureFromPackage(packagePath: string, CallGraphFilePath: string, actualPackagePath: string, ifCallGraphGenerated: number) {
   let CallGraphFiles: string[] = []
   let CallGraphFunctions: { [key: string]: string } = {}
 
@@ -15,7 +15,7 @@ export async function extractFeatureFromPackage(packagePath: string, CallGraphFi
       const data = await fs.readFile(filePath, 'utf8');
       const json = JSON.parse(data);
 
-      if (json.files) {
+      if (json.entries) {
         CallGraphFiles = json.files;
       }
       if (json.functions) {
@@ -28,6 +28,6 @@ export async function extractFeatureFromPackage(packagePath: string, CallGraphFi
 
   await readTargetData(CallGraphFilePath)
 
-  await getPackageFeatureInfo(packagePath, CallGraphFiles, CallGraphFunctions, actualPackagePath)
+  await getPackageFeatureInfo(packagePath, CallGraphFiles, CallGraphFunctions, actualPackagePath, ifCallGraphGenerated)
   return
 }

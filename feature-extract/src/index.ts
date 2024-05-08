@@ -1,7 +1,9 @@
-import { accessSync, constants } from 'fs'
+import { accessSync, constants, writeFileSync } from 'fs'
 import { Worker, isMainThread, parentPort, workerData } from 'worker_threads'
 import { Logger } from './Logger'
 import { analyzeSinglePackage, analyzePackages, analyzePackagesMaster, analyzePackagesWorker } from './programs/AnalyzePackage/PackageAnalyzer'
+
+const startTime = process.hrtime(); // 记录程序开始时间
 
 function showUsage() {
   Logger.info(
@@ -12,6 +14,7 @@ function showUsage() {
 \t$feature_pos_dir_path is absolute path to the parent directory of the feature position files.`
   )
 }
+export const callgraphRoundLimit = 5
 export const dfsDepthLimit = 3
 
 async function main() {
@@ -24,12 +27,12 @@ async function main() {
   // const featureQueueDirPath = process.argv[7]
 
   const option = '-d'
-  
-  const packageOrDirPath = '/home/wwy/SerMalDetector/data/.cache'
+
+  const packageOrDirPath = '/home/wwy/SerMalDetector/datasets/MalinBenPac/z_result'
   const featurePosDirPath = '/home/wwy/SerMalDetector/data/feature-positions'
   const CallGraphDirPath = '/home/wwy/SerMalDetector/data/call-graphs'
   const SequentialFeatureDirPath = '/home/wwy/SerMalDetector/data/result'
-  
+
 
   try {
     if (option === '-d') {
@@ -47,6 +50,9 @@ async function main() {
   } catch (error) {
     Logger.error(`Error: ${(error as Error).message}`)
     Logger.error(`Stack: ${(error as Error).stack}`)
+  } finally {
+    const endTime = process.hrtime(startTime);
+    Logger.info(`Execution time: ${endTime[0]}s ${endTime[1] / 1000000}ms`);
   }
   // else {
   //   showUsage()

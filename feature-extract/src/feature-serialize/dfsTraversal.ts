@@ -11,23 +11,20 @@ export interface CallQueueMap {
  * limiting the traversal depth to 3.
  * 
  * @param nodeIndex Index of the current node being visited.
- * @param graphData Data representing the call graph.
+ * @param CallGraphFun2Fun Data representing the call graph.
  * @param callQueueMap Map storing the sequence of function calls for each file.
  * @param currentPath The current path of node indices visited during the traversal.
  * @param fileName The name of the file being processed.
  */
-//……
 function dfsTraversal(nodeIndex: number, CallGraphFun2Fun: [number, number][], callQueueMap: CallQueueMap, currentPath: number[], fileName: string): void {
-  // Halt recursion if the depth reaches global limit or detects a cycle (depth of 3 for cycles)
   if (currentPath.length > dfsDepthLimit || (currentPath.includes(nodeIndex) && currentPath.length - currentPath.indexOf(nodeIndex) > 3)) {
     return;
   }
 
-  callQueueMap[fileName] = callQueueMap[fileName] || [];
+  callQueueMap[fileName] ||= [];
   currentPath.push(nodeIndex);
   callQueueMap[fileName].push(nodeIndex.toString());
 
-  // Iterate over function relationships
   CallGraphFun2Fun.forEach(([caller, callee]) => {
     if (caller === nodeIndex) {
       dfsTraversal(callee, CallGraphFun2Fun, callQueueMap, [...currentPath], fileName);
@@ -37,59 +34,49 @@ function dfsTraversal(nodeIndex: number, CallGraphFun2Fun: [number, number][], c
   currentPath.pop();
 }
 
-
 /**
- * Initiates the traversal of the function call graph and writes the call queue
- * to the specified output file. This function serves as the entry point for
- * performing the DFS traversal on the provided call graph.
+ * Reads the call graph data from the specified file and initializes DFS traversal from each entry point.
  * 
  * @param graphFilePath Path to the graph data file.
- * @param outputPath Path where the output file will be written.
+ * @param ifCallGraphGenerated Indicates whether the call graph was generated (-1 for not generated).
+ * @returns A promise that resolves with the call queue map.
  */
-export async function initiateTraversal(graphDataFilePath: string): Promise<CallQueueMap> {
+export async function initiateTraversal(graphDataFilePath: string, ifCallGraphGenerated: number): Promise<CallQueueMap> {
   const callQueueMap: CallQueueMap = {};
-  // Read the call graph data from the specified file
-  let CallGraphEntries: string[] = []
-  let CallGraphFiles: string[] = []
-  let CallGraphFunctions: { [key: string]: string } = {}
-  let CallGraphFun2Fun: [number, number][] = []
 
-
-  async function readTargetData(filePath) {
+  if (ifCallGraphGenerated === -1) {
     try {
-      const data = await fs.readFile(filePath, 'utf8');
+      const data = await fs.readFile(graphDataFilePath, 'utf8');
       const json = JSON.parse(data);
+      const CallGraphFiles: string[] = json.files || [];
 
-      if (json.files) {
-        CallGraphFiles = json.files;
-      }
-      if (json.functions) {
-        CallGraphFunctions = json.functions;
-      }
-      if (json.fun2fun) {
-        CallGraphFun2Fun = json.fun2fun;
-      }
-      if (json.entries) {
-        CallGraphEntries = json.entries;
-      }
-      return
+      CallGraphFiles.forEach(file => {
+        callQueueMap[file] = ['global'];
+      });
     } catch (error) {
       console.error('Error while reading the JSON file:', error);
     }
+
+    return callQueueMap;
   }
 
-  await readTargetData(graphDataFilePath)
-  // Start DFS traversal from each entry point
-  CallGraphEntries.forEach(entry => {
-    const startNodeIndex = CallGraphFiles.indexOf(entry);
-    if (startNodeIndex !== -1) {
-      Object.keys(CallGraphFunctions).reverse().forEach(func => {
-        if (CallGraphFunctions[func].startsWith(startNodeIndex.toString())) {
-          dfsTraversal(parseInt(func), CallGraphFun2Fun, callQueueMap, [], entry);
-        }
-      });
-    }
-  });
+  try {
+    const data = await fs.readFile(graphDataFilePath, 'utf8');
+    const { files: CallGraphFiles = [], functions: CallGraphFunctions = {}, fun2fun: CallGraphFun2Fun = [], entries: CallGraphEntries = [] } = JSON.parse(data);
+
+    CallGraphEntries.forEach(entry => {
+      const startNodeIndex = CallGraphFiles.indexOf(entry);
+      if (startNodeIndex !== -1) {
+        Object.keys(CallGraphFunctions).reverse().forEach(func => {
+          if (CallGraphFunctions[func].startsWith(startNodeIndex.toString())) {
+            dfsTraversal(parseInt(func), CallGraphFun2Fun, callQueueMap, [], entry);
+          }
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error while reading the JSON file:', error);
+  }
 
   return callQueueMap;
 }

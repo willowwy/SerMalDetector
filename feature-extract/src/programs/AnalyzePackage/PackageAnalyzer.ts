@@ -1,7 +1,5 @@
 import path from 'path'
 import promises from 'fs/promises'
-import { promisify } from 'util';
-import fs from 'fs';
 import { Worker, parentPort, workerData } from 'worker_threads'
 import { extractFeatureFromPackage } from '../../feature-extract'
 import { generateCallGraphForPackage } from '../../call-graph/generateCallGraph'
@@ -32,8 +30,9 @@ export async function analyzeSinglePackage(
 
   //generate call graph
   const CallGraphFilePath = path.join(CallGraphDirPath, `${packageName}_cg.json`)
+  let ifCallGraphGenerated = 0
   try {
-    await generateCallGraphForPackage(actualPackagePath, CallGraphFilePath)
+    ifCallGraphGenerated = await generateCallGraphForPackage(actualPackagePath, CallGraphFilePath)
     Logger.info(`Finished generating call graphs of ${packageName}, recorded at ${CallGraphFilePath}`)
   } catch (error) {
     Logger.error(getErrorInfo(error))
@@ -43,7 +42,7 @@ export async function analyzeSinglePackage(
   //extract feature
   const featurePosPath = path.join(featurePosDirPath, `${packageName}_fp.json`)
   try {
-    await extractFeatureFromPackage(packagePath, CallGraphFilePath, actualPackagePath)
+    await extractFeatureFromPackage(packagePath, CallGraphFilePath, actualPackagePath, ifCallGraphGenerated)
     // Logger.info(`Finished extracting features of ${packageName}, recorded at ${featurePosPath}`)
     await promises.writeFile(featurePosPath, getConfig().positionRecorder!.serializeRecord())
   } catch (error) {
@@ -54,7 +53,7 @@ export async function analyzeSinglePackage(
   //serialize features
   const resultFilePath = path.join(SequentialFeatureDirPath, `${packageName}_rst.json`)
   try {
-    await serializeFeatures(featurePosPath, CallGraphFilePath, resultFilePath)
+    await serializeFeatures(featurePosPath, CallGraphFilePath, resultFilePath, ifCallGraphGenerated)
     Logger.info(`${packageName} finished, recorded at ${resultFilePath}`)
   } catch (error) {
     Logger.error(getErrorInfo(error))
@@ -84,7 +83,7 @@ export async function analyzePackages(packageDirPath: string, featurePosDirPath:
 export async function analyzePackagesMaster(packagesPath: string[], featurePosDirPath: string, CallGraphDirPath: string, SequentialFeatureDirPath: string) {
   // const workersCount = os.cpus().length
   // FIXME: use 8 workers for now because of the memory limit, or the program will be killed
-  const workersCount = 4
+  const workersCount = 8
   const workload = Math.ceil(packagesPath.length / workersCount)
   const workers: Worker[] = []
   for (let i = 0; i < workersCount; i++) {
