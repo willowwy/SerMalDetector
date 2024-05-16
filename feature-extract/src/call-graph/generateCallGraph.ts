@@ -52,42 +52,50 @@ export async function generateCallGraphForPackage(packagePath: string, callGraph
         let excludeEntries = largeFiles.map(file => `${file}`).join(' ');
 
         // Construct the command
-        const command = `node --max-old-space-size=${MAX_HEAP} $(which npx) jelly -j ${callGraphFilePath} ${packagePath} --timeout 20 --no-callgraph-external ${excludeEntries ? '--exclude-entries ' + excludeEntries : ''} --ignore-unresolved --no-callgraph-implicit --no-callgraph-native `;
+        const command = `node --max-old-space-size=${MAX_HEAP} $(which npx) jelly -j ${callGraphFilePath} ${packagePath} --timeout 10 --no-callgraph-external ${excludeEntries ? '--exclude-entries ' + excludeEntries : ''} --ignore-unresolved --no-callgraph-implicit --no-callgraph-native`;
 
         // Spawn a child process to execute the command
         const childProcess = spawn(command, { shell: true });
 
-        // Listen for data on stdout
-        childProcess.stdout.on('data', (data) => {
-            const output = data.toString();
-            if (output.includes("Time limit reached, analysis aborted")) {
-                Logger.warn(packagePath + "Time limit reached, analysis aborted");
-            }
+        // Flag to indicate if "Time limit reached" was found
+        let timeLimitReached = false;
+
+        // Create a promise to handle stdout data
+        const stdoutPromise = new Promise<void>((resolve) => {
+            childProcess.stdout.on('data', (data) => {
+                const output = data.toString();
+                if (output.includes("Time limit reached")) {//Time limit reached
+                    Logger.warn(packagePath + " Time limit reached, analysis aborted");
+                    timeLimitReached = true;
+                }
+                resolve(); // Resolve without returning any value
+            });
         });
 
-        // Handle errors
-        childProcess.on('error', (error) => {
-            Logger.error(packagePath + `:Failed to generate call graph: ${error.message}`);
-            return Promise.resolve(-1); // Return -1 indicating abnormal termination
-        });
-
-        // Handle process exit
-        return new Promise<number>((resolve) => {
+        // Create a promise to handle process exit
+        const exitPromise = new Promise<number>((resolve) => {
             childProcess.on('exit', (code) => {
-                if (code !== 0) {
-                    Logger.error(packagePath + `:Failed to generate call graph. Process exited with code ${code}`);
+                if (timeLimitReached) {
+                    resolve(-1); // Return -1 if time limit was reached
+                } else if (code !== 0) {
+                    Logger.error(packagePath + `: Failed to generate call graph. Process exited with code ${code}`);
                     resolve(-1); // Return -1 indicating abnormal termination
                 } else {
                     resolve(1); // Return 1 indicating normal termination
                 }
             });
         });
+
+        // Wait for both promises to resolve
+        await Promise.all([stdoutPromise, exitPromise]);
+
+        // If the process exits normally, return 1
+        return timeLimitReached ? -1 : 1;
     } catch (error) {
         Logger.error(`Failed to generate call graph: ${error.message}`);
-        return Promise.resolve(-1); // Return -1 indicating abnormal termination
+        return -1; // Return -1 indicating abnormal termination
     }
 }
-
 
 
 /**

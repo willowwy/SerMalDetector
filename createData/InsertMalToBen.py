@@ -11,7 +11,6 @@ logging.basicConfig(
     filemode='a'  # 设置文件模式为'a'，表示追加模式
 )
 
-# from collections import defaultdict
 def read_file(file_path):
     """Reads the content of a file."""
     with open(file_path, "r", encoding="utf-8") as file:
@@ -128,11 +127,13 @@ def insert_a_to_b(files_a, current_subfolder_b):
         
         target_file_b = random.choice(files_b)
         insert_code_at_random_global_position(file_a, target_file_b)
-    print(f"Processed subfolders in {RESULT_MULTIPLIER} result folders.")
+    
+    return result_folder_name
 
 
 def process_folders(folder_a_path, folder_b_path):
     """Processes the given folders."""
+    total_packages = 0
     # Get all JavaScript files from folder A
     files_a = [file for file in os.listdir(folder_a_path) if file.endswith(".js")]
     try:
@@ -171,19 +172,23 @@ def process_folders(folder_a_path, folder_b_path):
                     file_a = next(files_a_iterator)
                     file_a_path = os.path.join(folder_a_path, file_a)
                     current_files_a.append(file_a_path)
-                # Process the current subfolder
-            insert_a_to_b(current_files_a, current_subfolder_b)
+            # Process the current subfolder
+            result_folder_name = insert_a_to_b(current_files_a, current_subfolder_b)
+            total_packages += 1
+            print(f"Processed subfolder '{current_subfolder_b}' into result folder '{result_folder_name}'.")
+
+    print(f"Total new packages generated: {total_packages}")
 
 
 # The number of insertions to perform for each subfolder in LongBenPac
-NUM_INSERTIONS = 1
+NUM_INSERTIONS = 2
 # The number of result folders to create for each subfolder in LongBenPac
-RESULT_MULTIPLIER = 3
+RESULT_MULTIPLIER = 2
 # The maximum number of possible insert points to consider in each file
 MAX_POINTS = 50
 # The path to the directory where the results will be stored
-RESULT_PATH = "/home/wwy/SerMalDetector/createDatasets/MalinBenPac/z_result"
+RESULT_PATH = "/home/wwy/SerMalDetector/datasets/MalinBenPac/new_guifan"
 process_folders(
-    "/home/wwy/SerMalDetector/createDatasets/MalinBenPac/shortMalSrc",
-    "/home/wwy/SerMalDetector/createDatasets/MalinBenPac/longBenSrc",
+    "/home/wwy/SerMalDetector/datasets/MalinBenPac/shortMalSrc",
+    "/home/wwy/SerMalDetector/datasets/MalinBenPac/longBenSrc",
 )

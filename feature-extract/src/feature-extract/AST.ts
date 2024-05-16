@@ -53,7 +53,7 @@ export async function extractFeaturesFromJSFileByAST(
    */
   function getFuncNum(nodePath: any, filePath: string): string | null {
     if (ifCallGraphGenerated === -1) {
-      return "global";
+      return "-1";
     }
 
     const relativePath = path.relative(actualPackagePath, filePath);

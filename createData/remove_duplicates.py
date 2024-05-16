@@ -1,35 +1,49 @@
 import os
-import json
-import logging
+import hashlib
 from collections import defaultdict
 
-def remove_duplicates(folder_path, log_file):
-    # 设置日志记录
-    logging.basicConfig(filename=log_file, level=logging.INFO, format='%(message)s')
+def get_file_hash(file_path):
+    """Compute the MD5 hash of the file."""
+    hasher = hashlib.md5()
+    with open(file_path, 'rb') as file:
+        buffer = file.read()
+        hasher.update(buffer)
+    return hasher.hexdigest()
 
-    # 用于跟踪文件内容的哈希表
-    content_hash_map = defaultdict(list)
+def remove_duplicate_files(directory):
+    """Remove duplicate files in the given directory."""
+    files_by_hash = defaultdict(list)
+    removed_count = 0
 
-    # 遍历文件夹下的所有文件
-    for filename in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, filename)
-        if os.path.isfile(file_path) and filename.endswith('.json'):
-            with open(file_path, 'r') as file:
-                # 读取JSON文件内容并计算哈希值
-                content = file.read()
-                content_hash = hash(content)
-                content_hash_map[content_hash].append(file_path)
+    # Populate the dictionary with file hashes and their paths
+    for root, _, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            file_hash = get_file_hash(file_path)
+            files_by_hash[file_hash].append(file_path)
 
-    # 删除重复内容的文件
-    for _, file_paths in content_hash_map.items():
+    # Count the total number of files before deduplication
+    total_files_before = sum(len(file_paths) for file_paths in files_by_hash.values())
+
+    # Remove duplicates
+    for file_paths in files_by_hash.values():
         if len(file_paths) > 1:
-            # 保留第一个文件，删除其他重复文件
+            # Keep the first file and remove the rest
             for file_path in file_paths[1:]:
-                logging.info(f'Duplicate files: {", ".join(file_paths)}')
-                logging.info(f'Keeping: {file_paths[0]}')
                 os.remove(file_path)
+                removed_count += 1
+                print(f"Removed duplicate file: {file_path}")
 
-# 使用示例
-folder_path = '/path/to/your/folder'
-log_file = 'duplicate_files.log'
-remove_duplicates(folder_path, log_file)
+    # Count the total number of files after deduplication
+    total_files_after = total_files_before - removed_count
+
+    print(f"Total files before deduplication: {total_files_before}")
+    print(f"Total duplicates removed: {removed_count}")
+    print(f"Total files after deduplication: {total_files_after}")
+
+if __name__ == "__main__":
+    directory = "/home/wwy/SerMalDetector/datasets/MalinBenPac/features"
+    if os.path.isdir(directory):
+        remove_duplicate_files(directory)
+    else:
+        print("Invalid directory path.")

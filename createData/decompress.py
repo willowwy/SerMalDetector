@@ -27,6 +27,6 @@ def decompress_packages(dataset_dir_path: str, output_dir: str , min_size_kb: in
                 try:
                     with tarfile.open(file_path, 'r:*') as tar:
                         tar.extractall(path=decompressed_path)
-                    print(f'Successfully decompressed {file_name}')
+                    # print(f'Successfully decompressed {file_name}')
                 except Exception as e:
                     print(f'Error decompressing {file_name}: {e}')

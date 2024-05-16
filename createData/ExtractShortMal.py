@@ -59,8 +59,8 @@ output_dir = '/home/wwy/SerMalDetector/createDatasets/MalinBenPac/shortMalSrc'
 
 
 # constraints of packages' size
-MIN_SIEZ_KB = 1
-MAX_SIZE_KB = 2
+MIN_SIEZ_KB = 0
+MAX_SIZE_KB = 3
 
 # Clear cache directory
 shutil.rmtree(cache_dir, ignore_errors=True)

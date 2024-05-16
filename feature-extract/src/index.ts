@@ -28,7 +28,7 @@ async function main() {
 
   const option = '-d'
 
-  const packageOrDirPath = '/home/wwy/SerMalDetector/datasets/MalinBenPac/z_result'
+  const packageOrDirPath = '/home/wwy/SerMalDetector/data/.cache'
   const featurePosDirPath = '/home/wwy/SerMalDetector/data/feature-positions'
   const CallGraphDirPath = '/home/wwy/SerMalDetector/data/call-graphs'
   const SequentialFeatureDirPath = '/home/wwy/SerMalDetector/data/result'
@@ -50,10 +50,7 @@ async function main() {
   } catch (error) {
     Logger.error(`Error: ${(error as Error).message}`)
     Logger.error(`Stack: ${(error as Error).stack}`)
-  } finally {
-    const endTime = process.hrtime(startTime);
-    Logger.info(`Execution time: ${endTime[0]}s ${endTime[1] / 1000000}ms`);
-  }
+  } 
   // else {
   //   showUsage()
   // }

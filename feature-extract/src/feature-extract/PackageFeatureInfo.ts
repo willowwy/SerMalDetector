@@ -15,7 +15,7 @@ import { setPositionRecorder } from "../config";
 import { Logger } from "../Logger";
 
 // <= 2 MB
-const ALLOWED_MAX_JS_SIZE = 2 * 1024 * 1024;
+const ALLOWED_MAX_JS_SIZE = 1* 1024 * 1024;
 
 /**
  * Extract features from the npm package
@@ -124,33 +124,32 @@ export async function getPackageFeatureInfo(
   async function traverseDir(baseDirPath: string, callGraphFiles: string[]) {
     for (const file of callGraphFiles) {
       const targetJSFilePath = path.join(baseDirPath, file);
-      const isInstallScriptFile =
-        result.executeJSFiles.findIndex(
-          (filePath) => filePath === targetJSFilePath
-        ) >= 0;
-      await new Promise((resolve) => {
-        setTimeout(async () => {
-          const jsFileContent = await promises.readFile(targetJSFilePath, {
-            encoding: "utf-8",
-          });
-          const fileInfo = await promises.stat(targetJSFilePath);
-          if (fileInfo.size <= ALLOWED_MAX_JS_SIZE) {
-            await extractFeaturesFromJSFileByAST(
-              jsFileContent,
-              isInstallScriptFile,
-              targetJSFilePath,
-              positionRecorder,
-              CallGraphFiles,
-              CallGraphFunctions,
-              actualPackagePath,
-              ifCallGraphGenerated
-            );
-          }
-          resolve(true);
-        }, 0);
-      });
+      const isInstallScriptFile = result.executeJSFiles.includes(targetJSFilePath);
+
+      // Read the file content and get the file info
+      const fileInfo = await promises.stat(targetJSFilePath);
+      
+      // console.log('1111111Starting AST for '+ targetJSFilePath);
+      if (fileInfo.size <= ALLOWED_MAX_JS_SIZE) {
+        const jsFileContent = await promises.readFile(targetJSFilePath, { encoding: "utf-8" });
+        // console.log(`2222222222Extracting features from file: ${targetJSFilePath}`);
+        await extractFeaturesFromJSFileByAST(
+          jsFileContent,
+          isInstallScriptFile,
+          targetJSFilePath,
+          positionRecorder,
+          CallGraphFiles,
+          CallGraphFunctions,
+          actualPackagePath,
+          ifCallGraphGenerated
+        );
+        // console.log('33333333Completed AST for '+ targetJSFilePath);
+      }
     }
+    // console.log('Completed traverseDir11111111111111111111111111111111111111111111');
   }
+
+  // Call the traverseDir function and handle the rest of the logic
   await traverseDir(actualPackagePath, CallGraphFiles);
   setPositionRecorder(positionRecorder);
   return;

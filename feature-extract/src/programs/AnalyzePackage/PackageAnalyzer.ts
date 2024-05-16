@@ -1,4 +1,5 @@
 import path from 'path'
+import fs from 'fs'
 import promises from 'fs/promises'
 import { Worker, parentPort, workerData } from 'worker_threads'
 import { extractFeatureFromPackage } from '../../feature-extract'
@@ -27,10 +28,20 @@ export async function analyzeSinglePackage(
     Logger.warn("Package " + packageName + " is empty or without package.json");
     return null;
   }
+  const startTime = process.hrtime(); // 记录程序开始时间
+
+  // temp修改
+  // const resultFilePath1 = path.join(SequentialFeatureDirPath, `${packageName}_rst.json`);
+  // try {
+  //   await promises.access(resultFilePath1);
+  //   // Logger.info(`${packageName} already analyzed. Skipping analysis.`);
+  //   return;
+  // } catch {
+  // }
 
   //generate call graph
   const CallGraphFilePath = path.join(CallGraphDirPath, `${packageName}_cg.json`)
-  let ifCallGraphGenerated = 0
+  let ifCallGraphGenerated = -1
   try {
     ifCallGraphGenerated = await generateCallGraphForPackage(actualPackagePath, CallGraphFilePath)
     Logger.info(`Finished generating call graphs of ${packageName}, recorded at ${CallGraphFilePath}`)
@@ -43,7 +54,7 @@ export async function analyzeSinglePackage(
   const featurePosPath = path.join(featurePosDirPath, `${packageName}_fp.json`)
   try {
     await extractFeatureFromPackage(packagePath, CallGraphFilePath, actualPackagePath, ifCallGraphGenerated)
-    // Logger.info(`Finished extracting features of ${packageName}, recorded at ${featurePosPath}`)
+    Logger.info(`Finished extracting features of ${packageName}, recorded at ${featurePosPath}`)
     await promises.writeFile(featurePosPath, getConfig().positionRecorder!.serializeRecord())
   } catch (error) {
     Logger.error(getErrorInfo(error))
@@ -59,6 +70,10 @@ export async function analyzeSinglePackage(
     Logger.error(getErrorInfo(error))
     return null
   }
+
+  const endTime = process.hrtime(startTime);
+  console.log(`Execution time: ${endTime[0]}s ${endTime[1] / 1000000}ms`);
+
 }
 
 /**

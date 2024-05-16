@@ -48,10 +48,10 @@ export async function initiateTraversal(graphDataFilePath: string, ifCallGraphGe
     try {
       const data = await fs.readFile(graphDataFilePath, 'utf8');
       const json = JSON.parse(data);
-      const CallGraphFiles: string[] = json.files || [];
+      const CallGraphFiles: string[] = json.entries || [];
 
       CallGraphFiles.forEach(file => {
-        callQueueMap[file] = ['global'];
+        callQueueMap[file] = ['-1'];
       });
     } catch (error) {
       console.error('Error while reading the JSON file:', error);

@@ -16,9 +16,9 @@ export async function extractFeatureFromPackage(packagePath: string, CallGraphFi
       const json = JSON.parse(data);
 
       if (json.entries) {
-        CallGraphFiles = json.files;
+        CallGraphFiles = json.entries;
       }
-      if (json.functions) {
+      if (json.functions && ifCallGraphGenerated === 1) {
         CallGraphFunctions = json.functions;
       }
     } catch (error) {
@@ -28,6 +28,9 @@ export async function extractFeatureFromPackage(packagePath: string, CallGraphFi
 
   await readTargetData(CallGraphFilePath)
 
+  if (ifCallGraphGenerated === -1) {
+    const n = 1 + 1
+  }
   await getPackageFeatureInfo(packagePath, CallGraphFiles, CallGraphFunctions, actualPackagePath, ifCallGraphGenerated)
   return
 }
