@@ -31,13 +31,13 @@ export async function analyzeSinglePackage(
   const startTime = process.hrtime(); // 记录程序开始时间
 
   // temp修改
-  // const resultFilePath1 = path.join(SequentialFeatureDirPath, `${packageName}_rst.json`);
-  // try {
-  //   await promises.access(resultFilePath1);
-  //   // Logger.info(`${packageName} already analyzed. Skipping analysis.`);
-  //   return;
-  // } catch {
-  // }
+  const resultFilePath1 = path.join(SequentialFeatureDirPath, `${packageName}_rst.json`);
+  try {
+    await promises.access(resultFilePath1);
+    // Logger.info(`${packageName} already analyzed. Skipping analysis.`);
+    return;
+  } catch {
+  }
 
   //generate call graph
   const CallGraphFilePath = path.join(CallGraphDirPath, `${packageName}_cg.json`)
@@ -72,7 +72,7 @@ export async function analyzeSinglePackage(
   }
 
   const endTime = process.hrtime(startTime);
-  console.log(`Execution time: ${endTime[0]}s ${endTime[1] / 1000000}ms`);
+  Logger.info(`Execution time: ${endTime[0]}s ${endTime[1] / 1000000}ms`);
 
 }
 

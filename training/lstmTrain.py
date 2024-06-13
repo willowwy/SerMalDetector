@@ -3,18 +3,22 @@ import json
 import numpy as np
 from gensim.models import Word2Vec
 import tensorflow as tf
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, LSTM, Dense, Bidirectional
 from tensorflow.keras.callbacks import Callback
 from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix, accuracy_score
 from sklearn.model_selection import train_test_split
+
+# 配置TensorFlow的线程和并发行为
+tf.config.threading.set_inter_op_parallelism_threads(8)
+tf.config.threading.set_intra_op_parallelism_threads(8)
 
 # 可调参数
 mal_dir = '/home/wwy/datasets/MalinBenPac/features'  # 恶意API序列的文件夹路径
 ben_dir = '/home/wwy/datasets/BenPac/features'  # 正常API序列的文件夹路径
 vector_size = 100  # 嵌入向量的维度 已ok
 max_sequence_length = 800  # 最大序列长度，所有序列将会被填充到这个长度 已ok
-model_save_path = '/home/wwy/SerMalDetector/training/word2vec_window8.model'  # 训练好模型的保存路径
+model_save_path = '/home/wwy/SerMalDetector/training/word2vec_window10.model'  # 训练好模型的保存路径
 
 # LSTM模型参数
 #model.fit(X_train, np.array(y_train), epochs=10, batch_size=32, validation_data=(X_test, np.array(y_test)), callbacks=[metrics])
@@ -25,7 +29,7 @@ lstm_recurrent_activation = 'sigmoid'  # LSTM层循环激活函数
 lstm_dropout = 0.1  # LSTM层输入数据的丢弃比率
 lstm_recurrent_dropout = 0.1  # LSTM层循环连接的丢弃比率
 epochs_times = 17
-BatchSize=32
+BatchSize = 32
 
 # 加载API序列
 def load_api_sequences(directory):
@@ -125,18 +129,28 @@ class Metrics(Callback):
         print(f"True Positives: {[f'{tp:.2f}' for tp in self.val_tp]}")
         print(f"False Positives: {[f'{fp:.2f}' for fp in self.val_fp]}")
 
+# 将数据转换为tf.data.Dataset
+def create_dataset(X, y, batch_size):
+    dataset = tf.data.Dataset.from_tensor_slices((X, y))
+    dataset = dataset.shuffle(buffer_size=len(X)).batch(batch_size)
+    dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+    return dataset
+
+# 创建训练和验证数据集
+train_dataset = create_dataset(X_train, np.array(y_train), BatchSize)
+val_dataset = create_dataset(X_test, np.array(y_test), BatchSize)
 
 # 训练模型
 metrics = Metrics(validation_data=(X_test, np.array(y_test)))
-model.fit(X_train, np.array(y_train), epochs=epochs_times, batch_size=BatchSize, validation_data=(X_test, np.array(y_test)), callbacks=[metrics])
+model.fit(train_dataset, epochs=epochs_times, validation_data=val_dataset, callbacks=[metrics])
 
 # 保存模型
 model.save('/home/wwy/SerMalDetector/training/malware_detection_model.keras')
 
-# # 示例：加载模型并进行预测
+# 示例：加载模型并进行预测
 # loaded_model = tf.keras.models.load_model('/home/wwy/SerMalDetector/training/malware_detection_model.keras')
 
-# # 示例API序列
+# 示例API序列
 # new_sequences = load_api_sequences('/path/to/new/api/sequences')
 # vectorized_new_sequences = vectorize_sequences(new_sequences, w2v_model, max_sequence_length)
 # predictions = loaded_model.predict(vectorized_new_sequences)

@@ -7,11 +7,11 @@ from gensim.models import Word2Vec
 mal_dir = '/home/wwy/datasets/MalinBenPac/features'  # 恶意API序列的文件夹路径
 ben_dir = '/home/wwy/datasets/BenPac/features'  # 正常API序列的文件夹路径
 vector_size = 100  # 嵌入向量的维度
-window_size = 8  # 上下文窗口的大小 #5 88
+window_size = 10  # 上下文窗口的大小 #5 88
 min_count = 1  # 最小出现频次
 sg = 1  # 1表示使用Skip-Gram模型，0表示使用CBOW模型
-workers = 4  # 并行训练使用的线程数
-model_save_path = '/home/wwy/SerMalDetector/training/word2vec_window8.model'  # 训练好模型的保存路径
+workers = 8  # 并行训练使用的线程数
+model_save_path = '/home/wwy/SerMalDetector/training/word2vec_window10.model'  # 训练好模型的保存路径
 
 # 加载API序列
 def load_api_sequences(directory):

@@ -10,7 +10,7 @@
 
 echo 'Creating data directories...'
 mkdir data
-mkdir -p data/call-graphs data/datasets data/feature-positions data/features
+mkdir -p data/call-graphs data/feature-positions data/features
 echo 'Data directories created!'
 
 echo 'Setuping the node environment and dependencies...'

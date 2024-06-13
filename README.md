@@ -4,16 +4,12 @@
 
 A project aimed at detecting and analyzing malicious package patterns through the use of sophisticated feature extraction and sequence analysis techniques.
 
-## Development Status
-
-This project is in the early stages of development. Currently, we are focused on developing core functionalities, including feature extraction and initial model training.
-
 ## Requirements
 
 ### Environment
 
 Python: Python 3.11.1
-node.js: node.js v18.16.0
+node.js: node.js v20.0.0
 
 ### Installation
 

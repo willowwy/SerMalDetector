@@ -4,10 +4,10 @@
   "description": "Extract features from npm package",
   "main": "src/index.ts",
   "scripts": {
-    "test": "jest",
+    "test": "webpack && cd dist && node main.js -d /home/wwy/SerMalDetector/data/datasets/test /home/wwy/SerMalDetector/data/call-graphs/test /home/wwy/SerMalDetector/data/feature-positions/test /home/wwy/SerMalDetector/data/features/test",
     "compile": "webpack",
     "jelly": "jelly -help",
-    "start": "webpack && cd dist && node main.js -d"
+    "start": "webpack && cd dist && node main.js"
   },
   "keywords": [],
   "author": "",
